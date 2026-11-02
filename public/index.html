@@ -1,0 +1,2493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Talk2Talk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sidebar-bg: #171717;
+    --sidebar-hover: #212121;
+    --main-bg: #212121;
+    --surface: #2F2F2F;
+    --surface-hover: #3A3A3A;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text-primary: #ECECF1;
+    --text-secondary: #B4B4B4;
+    --text-muted: #8E8EA0;
+    --accent: #10A37F;
+    --accent-hover: #0E8F6F;
+    --danger: #EF4444;
+    --a1: #10A37F;
+    --a2: #D97757;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-pill: 999px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--main-bg);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+  }
+  body { display: flex; overflow: hidden; }
+
+  button { font-family: inherit; }
+  input, textarea, select { font-family: inherit; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid var(--border);
+  }
+  .sidebar.collapsed { margin-left: -260px; }
+
+  .sidebar-top {
+    padding: 2px 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sidebar-brand {
+    padding: 0 16px 0;
+    display: flex;
+    justify-content: center;
+    margin-top: -8px;
+  }
+  .sidebar-logo-text {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #ECECF1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4), 0 0 12px rgba(255,255,255,0.06);
+    transition: all 0.2s;
+    user-select: none;
+    position: relative;
+  }
+  .sidebar-logo-text span {
+    background: linear-gradient(135deg, #10A37F, #14B88E);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .sidebar-logo-text:hover {
+    color: #FFFFFF;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4), 0 0 16px rgba(255,255,255,0.12);
+  }
+
+  .icon-btn {
+    width: 36px; height: 36px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .icon-btn:hover { background: var(--sidebar-hover); color: var(--text-primary); }
+  .icon-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .new-chat {
+    margin: 4px 8px 4px;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    transition: background 0.15s;
+    width: calc(100% - 16px);
+  }
+  .new-chat:hover { background: var(--sidebar-hover); }
+  .new-chat svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .sidebar-section {
+    padding: 4px 8px;
+    margin-top: 4px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    user-select: none;
+  }
+  .section-header:hover { background: var(--sidebar-hover); color: var(--text-primary); }
+  .section-header .chev { transition: transform 0.2s; }
+  .section-header.collapsed .chev { transform: rotate(-90deg); }
+  .section-body { padding: 4px 0; }
+  .section-body.hidden { display: none; }
+
+  .agent-card {
+    padding: 10px;
+    margin-bottom: 2px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    transition: background 0.15s;
+  }
+  .agent-card:hover { background: var(--sidebar-hover); }
+  .agent-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .agent-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.1);
+  }
+  .agent-dot.a1 { background: var(--a1); }
+  .agent-dot.a2 { background: var(--a2); }
+
+  .field { margin-bottom: 8px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    background: #2A2A2A;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    color: var(--text-primary);
+    font-size: 13px;
+    transition: border-color 0.15s, background 0.15s;
+    resize: vertical;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #333;
+  }
+  .field textarea { min-height: 60px; line-height: 1.4; }
+  .field select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238E8EA0' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+
+  .field-row { display: flex; gap: 6px; }
+  .field-row .field { flex: 1; }
+  .field-row .field.emoji-field { flex: 0 0 56px; }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+  }
+  .slider-row label { flex: 0 0 auto; font-weight: 500; }
+  .slider-row input[type=range] {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 4px;
+    cursor: pointer;
+  }
+  .slider-val {
+    min-width: 40px;
+    text-align: right;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    background: #2A2A2A;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .toggle {
+    position: relative;
+    width: 36px; height: 20px;
+    background: #4A4A4A;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(16px); }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    padding: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .user-chip {
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .user-chip:hover { background: var(--sidebar-hover); }
+  .user-chip .avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10A37F, #D97757);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 11px;
+  }
+  .user-chip .meta { flex: 1; min-width: 0; }
+  .user-chip .meta-title { font-weight: 500; font-size: 13px; }
+  .user-chip .meta-sub { font-size: 11px; color: var(--text-muted); }
+
+  /* ── Main ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+    background: var(--main-bg);
+  }
+  .topbar {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--main-bg);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .model-chip {
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .model-chip:hover { background: var(--surface); }
+  .model-chip .sub { color: var(--text-muted); font-weight: 400; font-size: 14px; }
+  .model-chip svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+  .report-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-muted); border-radius: var(--radius-pill);
+    padding: 5px 12px; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .report-btn:hover { color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.08); }
+  .report-btn svg { flex-shrink: 0; }
+
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--surface);
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .status-indicator.show { opacity: 1; }
+  .status-indicator .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+  .status-indicator.active .dot {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 1.5s infinite;
+  }
+  .status-indicator.error .dot { background: var(--danger); }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+
+  .chat-wrap {
+    flex: 1;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+  .chat-col {
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 16px 24px 32px;
+  }
+
+  /* Welcome */
+  .welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 20px;
+  }
+  .welcome-logo {
+    background: transparent;
+    width: auto; height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .welcome-logo svg { width: 28px; height: 28px; stroke: white; fill: none; stroke-width: 2; }
+  .welcome-logo .logo-img {
+    width: 180px;
+    height: auto;
+    object-fit: contain;
+  }
+  .welcome-logo-text {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    color: #ECECF1;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    user-select: none;
+  }
+  .welcome-logo-text span {
+    background: linear-gradient(135deg, #10A37F, #14B88E);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .user-chip .avatar .avatar-logo {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .user-chip .avatar:has(.avatar-logo) {
+    background: transparent;
+    padding: 0;
+  }
+  .welcome h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+  .welcome p {
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 480px;
+    margin-bottom: 32px;
+  }
+  .suggestions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    width: 100%;
+    max-width: 640px;
+  }
+  .suggestion {
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .suggestion:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+  }
+  .suggestion-title { font-weight: 500; margin-bottom: 2px; }
+  .suggestion-desc { color: var(--text-muted); font-size: 12px; }
+
+  /* Messages */
+  .msg {
+    display: flex;
+    gap: 16px;
+    padding: 20px 0;
+    animation: fadein 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg + .msg { border-top: 1px solid var(--border); }
+  .msg-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: white;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+  .msg.a1 .msg-avatar { background: var(--a1); }
+  .msg.a2 .msg-avatar { background: var(--a2); }
+  .msg-body { flex: 1; min-width: 0; padding-top: 0; }
+  .msg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .msg-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .msg-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .msg:hover .msg-actions { opacity: 1; }
+  .msg-action {
+    width: 28px; height: 28px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .msg-action:hover { background: var(--surface); color: var(--text-primary); }
+  .msg-action svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .msg-text {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+  }
+  .msg.streaming .msg-text::after {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: var(--text-primary);
+    margin-left: 3px;
+    vertical-align: text-bottom;
+    animation: cursor-blink 1s steps(2) infinite;
+  }
+  @keyframes cursor-blink { 50% { opacity: 0; } }
+
+  /* Thinking dots */
+  .thinking {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px 0;
+    align-items: center;
+  }
+  .thinking span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+    animation: bounce 1.4s infinite ease-in-out both;
+  }
+  .thinking span:nth-child(1) { animation-delay: -0.32s; }
+  .thinking span:nth-child(2) { animation-delay: -0.16s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Input area */
+  .input-area {
+    padding: 12px 24px 16px;
+    flex-shrink: 0;
+    background: var(--main-bg);
+  }
+  .input-col {
+    max-width: 768px;
+    margin: 0 auto;
+  }
+  .composer {
+    background: var(--surface);
+    border-radius: 24px;
+    padding: 10px 12px 10px 18px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .composer:focus-within {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-lg);
+  }
+  .composer textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.5;
+    resize: none;
+    max-height: 200px;
+    padding: 8px 0;
+    outline: none;
+  }
+  .composer textarea::placeholder { color: var(--text-muted); }
+  .send-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--text-primary);
+    color: var(--main-bg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .send-btn:hover:not(:disabled) { transform: scale(1.05); }
+  .send-btn:disabled {
+    background: #565656;
+    color: #8e8ea0;
+    cursor: not-allowed;
+  }
+  .send-btn.stop {
+    background: var(--text-primary);
+    color: var(--main-bg);
+  }
+  .send-btn svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
+
+  .disclaimer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface);
+    color: var(--text-primary);
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-strong);
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 100;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* History list */
+  .history-list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .history-empty {
+    padding: 12px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .history-item {
+    padding: 10px 12px;
+    margin: 2px 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .history-item:hover { background: var(--sidebar-hover); }
+  .history-item.active { background: var(--surface); }
+  .history-item-icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .history-item-icon svg { width: 14px; height: 14px; stroke: var(--text-secondary); fill: none; stroke-width: 2; }
+  .history-item-content { flex: 1; min-width: 0; }
+  .history-item-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .history-item-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .history-item-delete {
+    width: 24px; height: 24px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.15s;
+  }
+  .history-item:hover .history-item-delete { opacity: 1; }
+  .history-item-delete:hover { background: var(--surface); color: var(--danger); }
+  .history-item-delete svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  /* Settings button */
+  .settings-btn {
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    transition: background 0.15s;
+    margin-bottom: 4px;
+  }
+  .settings-btn:hover { background: var(--sidebar-hover); }
+  .settings-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--main-bg);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 560px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    animation: modal-in 0.2s ease;
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { background: var(--surface); color: var(--text-primary); }
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .settings-section {
+    margin-bottom: 28px;
+  }
+  .settings-section:last-child { margin-bottom: 0; }
+  .settings-section h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .settings-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-primary, .btn-secondary, .btn-danger {
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+  .btn-danger:hover { background: var(--danger); color: white; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+  }
+  .modal-large {
+    max-width: 720px;
+  }
+  .modal-content {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+  .settings-tabs {
+    width: 180px;
+    border-right: 1px solid var(--border);
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .settings-tab {
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    border-radius: 0;
+  }
+  .settings-tab:hover {
+    background: var(--surface);
+    color: var(--text-primary);
+  }
+  .settings-tab.active {
+    background: var(--surface);
+    color: var(--text-primary);
+    border-left: 3px solid var(--accent);
+  }
+  .settings-tab-content {
+    display: none;
+  }
+  .settings-tab-content.active {
+    display: block;
+  }
+
+  /* Model chip dropdown */
+  .model-chip {
+    position: relative;
+    cursor: pointer;
+  }
+  .preset-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 340px;
+    background: var(--main-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 50;
+    display: none;
+    overflow: hidden;
+  }
+  .preset-dropdown.show { display: block; }
+  .preset-dropdown-header {
+    padding: 12px 14px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .preset-list {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 6px;
+  }
+  .preset-item {
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .preset-item:hover { background: var(--surface); }
+  .preset-item.active { background: var(--surface); }
+  .preset-avatars {
+    display: flex;
+    gap: -4px;
+    flex-shrink: 0;
+  }
+  .preset-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: white;
+    font-weight: 600;
+    border: 2px solid var(--main-bg);
+  }
+  .preset-avatar:first-child { background: var(--a1); }
+  .preset-avatar:last-child { background: var(--a2); margin-left: -6px; }
+  .preset-info { flex: 1; min-width: 0; }
+  .preset-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .preset-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .preset-delete {
+    width: 24px; height: 24px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.15s;
+  }
+  .preset-item:hover .preset-delete { opacity: 1; }
+  .preset-delete:hover { background: var(--surface-hover); color: var(--danger); }
+  .preset-delete svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .preset-footer {
+    padding: 8px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 6px;
+  }
+  .preset-footer-btn {
+    flex: 1;
+    padding: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .preset-footer-btn:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+  .preset-footer-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+  .preset-footer-btn.primary:hover { background: var(--accent-hover); }
+  .preset-footer-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #4a4a4a; }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .sidebar { position: absolute; z-index: 20; height: 100%; box-shadow: var(--shadow-lg); }
+    .sidebar.collapsed { margin-left: -260px; }
+    .chat-col { padding: 12px 16px 24px; }
+    .input-area { padding: 8px 12px 12px; }
+    .welcome h1 { font-size: 22px; }
+    .msg { gap: 10px; padding: 16px 0; }
+    .suggestions { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-top">
+    <button class="icon-btn" id="toggleSidebar" title="Close sidebar">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+    </button>
+    <button class="icon-btn" id="newChatTop" title="New chat">
+      <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    </button>
+  </div>
+
+  <div class="sidebar-brand">
+    <span class="sidebar-logo-text">Talk<span>2</span>Talk</span>
+  </div>
+
+  <button class="new-chat" id="newChat">
+    <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    New chat
+  </button>
+
+  <div class="sidebar-section">
+    <div class="section-header" id="historyHeader">
+      <span>History</span>
+      <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body" id="historyBody">
+      <div class="history-list" id="historyList">
+        <div class="history-empty">No conversations yet</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-bottom">
+    <button class="settings-btn" id="settingsBtn" title="Settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span>Settings</span>
+    </button>
+    <div class="user-chip">
+      <div class="avatar">T2T</div>
+      <div class="meta">
+        <div class="meta-title">AI Talk2Talk</div>
+        <div class="meta-sub">Free · Pollinations.ai</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <button class="icon-btn" id="openSidebar" style="display:none;" title="Open sidebar">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+    </button>
+    <div class="model-chip" id="modelChip">
+      <span id="chipLabel">AI Talk2Talk</span>
+      <span class="sub" id="chipSub">· two models</span>
+      <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      <div class="preset-dropdown" id="presetDropdown">
+        <div class="preset-dropdown-header">Personality presets</div>
+        <div class="preset-list" id="presetList"></div>
+        <div class="preset-footer">
+          <button class="preset-footer-btn" id="savePresetBtn" title="Save current agent config as preset">
+            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save current
+          </button>
+          <button class="preset-footer-btn primary" id="openAgentsBtn">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Edit custom
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="report-btn" id="reportBtn" title="Report inappropriate content">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="4" y1="22" x2="4" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Report</span>
+      </button>
+      <div class="status-indicator" id="statusPill">
+        <span class="dot"></span>
+        <span id="statusText">Ready</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-wrap" id="chatWrap">
+    <div class="chat-col" id="chatCol">
+      <div class="welcome" id="welcome">
+        <div class="welcome-logo">
+          <span class="welcome-logo-text">Talk<span>2</span>Talk</span>
+        </div>
+        <h1>Two AIs, one conversation</h1>
+        <p>Configure two AI personas and watch them discuss any topic in real-time. Free, no API key required.</p>
+        <div class="suggestions">
+          <div class="suggestion" data-topic="Debate whether consciousness can exist without a physical body.">
+            <div class="suggestion-title">Consciousness debate</div>
+            <div class="suggestion-desc">Can minds exist without bodies?</div>
+          </div>
+          <div class="suggestion" data-topic="Discuss the future of AI and its impact on human creativity.">
+            <div class="suggestion-title">Future of AI</div>
+            <div class="suggestion-desc">Impact on human creativity</div>
+          </div>
+          <div class="suggestion" data-topic="Argue about whether pineapple belongs on pizza.">
+            <div class="suggestion-title">Pineapple pizza</div>
+            <div class="suggestion-desc">The eternal food debate</div>
+          </div>
+          <div class="suggestion" data-topic="Compare Stoicism and Existentialism as philosophies for modern life.">
+            <div class="suggestion-title">Philosophy clash</div>
+            <div class="suggestion-desc">Stoicism vs Existentialism</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-col">
+      <div class="composer">
+        <textarea id="topicInput" rows="1" placeholder="Enter a topic for the AIs to discuss…"></textarea>
+        <button class="send-btn" id="sendBtn" title="Start">
+          <svg id="sendIcon" viewBox="0 0 24 24"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg id="stopIcon" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        </button>
+      </div>
+      <div class="disclaimer">AI Talk2Talk can make mistakes. Powered by Pollinations.ai</div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal modal-large">
+    <div class="modal-header">
+      <h2>Settings</h2>
+      <button class="modal-close" id="closeSettings">&times;</button>
+    </div>
+    <div class="modal-content">
+      <div class="settings-tabs">
+        <button class="settings-tab active" data-tab="agents">Agents</button>
+        <button class="settings-tab" data-tab="conversation">Conversation</button>
+        <button class="settings-tab" data-tab="preferences">Preferences</button>
+        <button class="settings-tab" data-tab="api">API</button>
+        <button class="settings-tab" data-tab="account">Account</button>
+      </div>
+      <div class="modal-body">
+        <!-- Agents Tab -->
+        <div class="settings-tab-content active" id="tab-agents">
+          <div class="settings-section">
+            <h3>Agent 1</h3>
+            <div class="field-row">
+              <div class="field"><label>Name</label><input id="a0-name" value="ChatGPT"></div>
+              <div class="field emoji-field"><label>Icon</label><input id="a0-emoji" value="G" maxlength="2"></div>
+            </div>
+            <div class="field"><label>Model</label>
+              <select id="a0-model">
+                <option value="openai">GPT (Default)</option>
+                <option value="openai-fast">GPT Fast</option>
+                <option value="mistral">Mistral</option>
+                <option value="llama">Llama</option>
+                <option value="claude-hybridspace">Claude</option>
+              </select>
+            </div>
+            <div class="field"><label>Personality</label>
+              <textarea id="a0-prompt">You are ChatGPT: helpful, friendly, and informative. Keep responses concise and conversational (1-4 sentences). Never use lists or asterisks.</textarea>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>Agent 2</h3>
+            <div class="field-row">
+              <div class="field"><label>Name</label><input id="a1-name" value="Claude"></div>
+              <div class="field emoji-field"><label>Icon</label><input id="a1-emoji" value="C" maxlength="2"></div>
+            </div>
+            <div class="field"><label>Model</label>
+              <select id="a1-model">
+                <option value="openai">GPT (Default)</option>
+                <option value="openai-fast">GPT Fast</option>
+                <option value="mistral">Mistral</option>
+                <option value="llama">Llama</option>
+                <option value="claude-hybridspace" selected>Claude</option>
+              </select>
+            </div>
+            <div class="field"><label>Personality</label>
+              <textarea id="a1-prompt">You are Claude: thoughtful, analytical, and curious. You enjoy exploring complex topics with nuance. Keep responses concise and conversational (1-4 sentences). Never use lists or asterisks.</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversation Tab -->
+        <div class="settings-tab-content" id="tab-conversation">
+          <div class="settings-section">
+            <h3>Conversation Settings</h3>
+            <div class="slider-row">
+              <label>Pause between messages</label>
+              <input type="range" id="pause" min="0" max="8000" step="250" value="1000">
+              <span class="slider-val" id="pauseVal">1.0s</span>
+            </div>
+            <div class="slider-row">
+              <label>Maximum turns</label>
+              <input type="range" id="maxTurns" min="0" max="100" step="2" value="20">
+              <span class="slider-val" id="turnsVal">20</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preferences Tab -->
+        <div class="settings-tab-content" id="tab-preferences">
+          <div class="settings-section">
+            <h3>Display</h3>
+            <div class="toggle-row">
+              <span>Auto-scroll to new messages</span>
+              <div class="toggle on" id="autoScrollToggle"></div>
+            </div>
+            <div class="toggle-row">
+              <span>Show agent avatars</span>
+              <div class="toggle on" id="avatarToggle"></div>
+            </div>
+            <div class="toggle-row">
+              <span>Compact message spacing</span>
+              <div class="toggle" id="compactToggle"></div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>Audio</h3>
+            <div class="toggle-row">
+              <span>Sound effects</span>
+              <div class="toggle" id="soundToggle"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- API Tab -->
+        <div class="settings-tab-content" id="tab-api">
+          <div class="settings-section">
+            <h3>API Configuration</h3>
+            <div class="field">
+              <label>API Endpoint</label>
+              <input type="text" id="apiEndpoint" value="https://text.pollinations.ai/openai" placeholder="API URL">
+            </div>
+            <div class="field">
+              <label>API Key (optional)</label>
+              <input type="password" id="apiKey" placeholder="Leave empty for free APIs">
+            </div>
+            <div class="field">
+              <label>Default Model</label>
+              <select id="defaultModel">
+                <option value="openai">GPT (Default)</option>
+                <option value="openai-fast">GPT Fast</option>
+                <option value="mistral">Mistral</option>
+                <option value="llama">Llama</option>
+                <option value="claude-hybridspace">Claude</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Tab -->
+        <div class="settings-tab-content" id="tab-account">
+          <div class="settings-section">
+            <h3>Account Settings</h3>
+            <div class="field">
+              <label>Display Name</label>
+              <input type="text" id="displayName" value="User" placeholder="Your name">
+            </div>
+            <div class="field">
+              <label>Theme</label>
+              <select id="themeSelect">
+                <option value="dark" selected>Dark</option>
+                <option value="light" disabled>Light (Coming soon)</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>Data Management</h3>
+            <div class="settings-actions">
+              <button class="btn-secondary" id="exportHistory">Export History</button>
+              <button class="btn-secondary" id="importHistory">Import History</button>
+              <button class="btn-danger" id="clearHistory">Clear All History</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="saveSettings">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const chatCol = document.getElementById('chatCol');
+const chatWrap = document.getElementById('chatWrap');
+const sendBtn = document.getElementById('sendBtn');
+const sendIcon = document.getElementById('sendIcon');
+const stopIcon = document.getElementById('stopIcon');
+const topicInput = document.getElementById('topicInput');
+const statusPill = document.getElementById('statusPill');
+const statusText = document.getElementById('statusText');
+const sidebar = document.getElementById('sidebar');
+const toast = document.getElementById('toast');
+
+let agents = [];
+let activeMessage = null;
+let lastState = null;
+let pollTimer = null;
+let isRunning = false;
+let autoScroll = true;
+let soundOn = false;
+let showAvatars = true;
+let compactMode = false;
+
+// Audio context for sound effects
+let audioCtx = null;
+function playSound(freq = 440, duration = 0.08) {
+  if (!soundOn) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+  } catch {}
+}
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// Auto-resize textarea
+topicInput.addEventListener('input', () => {
+  topicInput.style.height = 'auto';
+  topicInput.style.height = Math.min(topicInput.scrollHeight, 200) + 'px';
+});
+
+// Sidebar toggles
+document.getElementById('toggleSidebar').onclick = () => {
+  sidebar.classList.add('collapsed');
+  document.getElementById('openSidebar').style.display = 'flex';
+};
+document.getElementById('openSidebar').onclick = () => {
+  sidebar.classList.remove('collapsed');
+  document.getElementById('openSidebar').style.display = 'none';
+};
+
+// Collapsible sections
+function setupCollapsible(headerId, bodyId) {
+  const h = document.getElementById(headerId);
+  const b = document.getElementById(bodyId);
+  if (!h || !b) return;
+  h.onclick = () => {
+    h.classList.toggle('collapsed');
+    b.classList.toggle('hidden');
+  };
+}
+setupCollapsible('historyHeader', 'historyBody');
+
+// Sliders (in settings modal Conversation tab)
+const pauseEl = document.getElementById('pause');
+const maxTurnsEl = document.getElementById('maxTurns');
+if (pauseEl) pauseEl.oninput = e => {
+  const v = document.getElementById('pauseVal');
+  if (v) v.textContent = (e.target.value / 1000).toFixed(1) + 's';
+};
+if (maxTurnsEl) maxTurnsEl.oninput = e => {
+  const v = document.getElementById('turnsVal');
+  if (v) v.textContent = e.target.value == 0 ? '∞' : e.target.value;
+};
+
+// Toggles
+function setupToggle(id, initial, onChange) {
+  const el = document.getElementById(id);
+  let state = initial;
+  if (state) el.classList.add('on'); else el.classList.remove('on');
+  el.onclick = () => {
+    state = !state;
+    el.classList.toggle('on', state);
+    onChange(state);
+  };
+  return () => state;
+}
+const getAutoScroll = setupToggle('autoScrollToggle', true, v => { autoScroll = v; });
+const getSound = setupToggle('soundToggle', false, v => { soundOn = v; });
+const getAvatars = setupToggle('avatarToggle', true, v => { showAvatars = v; document.querySelectorAll('.msg-avatar').forEach(a => a.style.display = v ? 'flex' : 'none'); });
+const getCompact = setupToggle('compactToggle', false, v => { compactMode = v; document.querySelectorAll('.msg').forEach(m => m.style.padding = v ? '10px 0' : '20px 0'); });
+
+// Status
+function setStatus(text, type = '') {
+  statusText.textContent = text;
+  statusPill.className = 'status-indicator' + (text ? ' show' : '') + (type ? ' ' + type : '');
+}
+
+function setRunning(running) {
+  isRunning = running;
+  sendIcon.style.display = running ? 'none' : 'block';
+  stopIcon.style.display = running ? 'block' : 'none';
+  sendBtn.classList.toggle('stop', running);
+  sendBtn.title = running ? 'Stop' : 'Start';
+}
+
+// Messages
+function clearChat() {
+  chatCol.innerHTML = '';
+  const w = document.createElement('div');
+  w.className = 'welcome';
+  w.id = 'welcome';
+  w.innerHTML = `
+    <div class="welcome-logo"><span class="welcome-logo-text">Talk<span>2</span>Talk</span></div>
+    <h1>Two AIs, one conversation</h1>
+    <p>Configure two AI personas and watch them discuss any topic in real-time.</p>
+  `;
+  chatCol.appendChild(w);
+  activeMessage = null;
+}
+
+function ensureWelcomeHidden() {
+  const w = document.getElementById('welcome');
+  if (w) w.style.display = 'none';
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'));
+}
+
+function renderMessage(agentIdx, content, streaming = false) {
+  ensureWelcomeHidden();
+  const msg = document.createElement('div');
+  msg.className = 'msg a' + (agentIdx + 1) + (streaming ? ' streaming' : '');
+  msg.dataset.agent = agentIdx;
+  if (compactMode) msg.style.padding = '10px 0';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar';
+  avatar.textContent = agents[agentIdx]?.emoji || (agentIdx === 0 ? 'G' : 'C');
+  if (!showAvatars) avatar.style.display = 'none';
+
+  const body = document.createElement('div');
+  body.className = 'msg-body';
+
+  const header = document.createElement('div');
+  header.className = 'msg-header';
+  const name = document.createElement('div');
+  name.className = 'msg-name';
+  name.textContent = agents[agentIdx]?.name || 'AI ' + (agentIdx + 1);
+
+  const actions = document.createElement('div');
+  actions.className = 'msg-actions';
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'msg-action';
+  copyBtn.title = 'Copy';
+  copyBtn.innerHTML = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+  copyBtn.onclick = () => copyText(content || '');
+  actions.appendChild(copyBtn);
+
+  header.appendChild(name);
+  header.appendChild(actions);
+
+  const text = document.createElement('div');
+  text.className = 'msg-text';
+  text.textContent = content || '';
+
+  body.appendChild(header);
+  body.appendChild(text);
+  msg.appendChild(avatar);
+  msg.appendChild(body);
+  chatCol.appendChild(msg);
+  if (autoScroll) chatWrap.scrollTop = chatWrap.scrollHeight;
+  return msg;
+}
+
+function diffRender(state) {
+  const currentMsgs = chatCol.querySelectorAll('.msg:not(.streaming)');
+  while (currentMsgs.length < state.messages.length) {
+    const idx = currentMsgs.length;
+    renderMessage(state.messages[idx].agent, state.messages[idx].content, false);
+    playSound(600 + idx * 50, 0.05);
+    break;
+  }
+
+  if (state.activeMsg) {
+    if (!activeMessage || activeMessage.dataset.agent != state.activeMsg.agent) {
+      if (activeMessage) activeMessage.classList.remove('streaming');
+      activeMessage = renderMessage(state.activeMsg.agent, state.activeMsg.content || '', true);
+    } else {
+      const td = activeMessage.querySelector('.msg-text');
+      if (td) td.textContent = state.activeMsg.content || '';
+      if (autoScroll) chatWrap.scrollTop = chatWrap.scrollHeight;
+    }
+  } else if (activeMessage) {
+    activeMessage.classList.remove('streaming');
+    // update copy button with final content
+    const copyBtn = activeMessage.querySelector('.msg-action');
+    if (copyBtn) {
+      const finalText = state.messages[state.messages.length - 1]?.content || '';
+      copyBtn.onclick = () => copyText(finalText);
+    }
+    activeMessage = null;
+  }
+}
+
+function updateFromState(state) {
+  agents = state.agents || agents;
+
+  if (!lastState) {
+    clearChat();
+    for (const m of state.messages) renderMessage(m.agent, m.content);
+    if (state.activeMsg) {
+      activeMessage = renderMessage(state.activeMsg.agent, state.activeMsg.content || '', true);
+    }
+  } else {
+    if (state.messages.length < lastState.messages.length && state.turn <= lastState.turn) {
+      clearChat();
+      for (const m of state.messages) renderMessage(m.agent, m.content);
+    } else {
+      diffRender(state);
+    }
+  }
+
+  if (state.error) {
+    setStatus('Error: ' + state.error, 'error');
+    setRunning(false);
+  } else if (state.active) {
+    setRunning(true);
+    if (state.activeMsg) {
+      const a = agents[state.activeMsg.agent];
+      setStatus(`${a?.name || 'AI'} is typing…`, 'active');
+    } else {
+      const nextAgent = state.turn % 2;
+      const a = agents[nextAgent];
+      setStatus(`${a?.name || 'AI'} is thinking…`, 'active');
+    }
+  } else {
+    setRunning(false);
+    if (state.messages.length === 0) {
+      setStatus('');
+    } else {
+      setStatus(`Ended · ${state.turn} turns`);
+      setTimeout(() => setStatus(''), 4000);
+    }
+  }
+  lastState = state;
+}
+
+async function poll() {
+  try {
+    const res = await fetch('/api/state', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const state = await res.json();
+    updateFromState(state);
+  } catch (e) {
+    setStatus('Reconnecting…', 'error');
+  }
+}
+
+function startPolling() {
+  if (pollTimer) return;
+  poll();
+  pollTimer = setInterval(poll, 600);
+}
+
+async function startChat() {
+  const topic = topicInput.value.trim();
+  if (!topic) { topicInput.focus(); showToast('Enter a topic first'); return; }
+
+  // Content filter (client-side) — fast regex check
+  const check = isTopicAllowed(topic);
+  if (!check.allowed) {
+    showToast(check.reason);
+    setStatus('Topic blocked', 'error');
+    setTimeout(() => setStatus(''), 3000);
+    return;
+  }
+
+  setStatus('Starting…', 'active');
+  clearChat();
+  lastState = null;
+
+  const body = {
+    agents: [
+      { name: document.getElementById('a0-name').value, emoji: document.getElementById('a0-emoji').value, prompt: document.getElementById('a0-prompt').value },
+      { name: document.getElementById('a1-name').value, emoji: document.getElementById('a1-emoji').value, prompt: document.getElementById('a1-prompt').value },
+    ],
+    topic,
+    pauseMs: +document.getElementById('pause').value,
+    maxTurns: +document.getElementById('maxTurns').value,
+  };
+  try {
+    const res = await fetch('/api/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setStatus('Error: ' + (err.error || 'failed to start'), 'error');
+    } else {
+      playSound(500, 0.08);
+    }
+  } catch (e) {
+    setStatus('Network error', 'error');
+  }
+}
+
+async function stopChat() {
+  setStatus('Stopping…');
+  await fetch('/api/stop', { method: 'POST' });
+}
+
+async function resetChat() {
+  lastState = null;
+  clearChat();
+  setStatus('');
+  await fetch('/api/reset', { method: 'DELETE' });
+}
+
+sendBtn.onclick = () => {
+  if (isRunning) stopChat();
+  else startChat();
+};
+
+topicInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (!isRunning) startChat();
+  }
+});
+
+document.getElementById('newChat').onclick = resetChat;
+document.getElementById('newChatTop').onclick = resetChat;
+
+// Report button — opens GitHub issues to report inappropriate content
+document.getElementById('reportBtn').onclick = () => {
+  const topic = document.getElementById('topic').value.trim();
+  const msgs = state?.messages || [];
+  const lastMsgs = msgs.slice(-4).map(m => `[${m.agent === 0 ? 'A' : 'B'}]: ${m.content.slice(0, 150)}`).join('\n');
+  const body = encodeURIComponent(
+    `## Report: Inappropriate AI Content\n\n` +
+    `**Topic:** ${topic}\n` +
+    `**Time:** ${new Date().toISOString()}\n\n` +
+    `### Recent messages:\n\`\`\`\n${lastMsgs || '(no messages yet)'}\n\`\`\`\n\n` +
+    `### What happened?\n<!-- Describe the inappropriate content -->\n\n` +
+    `### Steps to reproduce\n<!-- How did this happen? -->\n`
+  );
+  window.open(`https://github.com/YOUR-USERNAME/Ai_Talk2Talk/issues/new?title=${encodeURIComponent('[Report] Inappropriate content generated')}&body=${body}`, '_blank');
+};
+
+// Suggestions
+document.querySelectorAll('.suggestion').forEach(s => {
+  s.onclick = () => {
+    topicInput.value = s.dataset.topic;
+    topicInput.style.height = 'auto';
+    topicInput.style.height = Math.min(topicInput.scrollHeight, 200) + 'px';
+    topicInput.focus();
+  };
+});
+
+startPolling();
+
+// ── Topic Content Filter ──
+// Normalizes leetspeak then checks banned patterns.
+// Categories: sexual content, religious debate, hate speech, extreme violence,
+// self-harm, drugs/illegal, harassment.
+const BANNED_PATTERNS = [
+  // ═══ SEXUAL CONTENT (400+ terms) ═══
+  /\b(sex|seks|secks|s3x|sexx|sexy|sexual|sexually|sexed|sexing|sexist|sexism)\b/i,
+  /\b(porn|porno|pornography|pornographic|p0rn|pr0n|pron|pr0n|pornhub|xvideos|xnxx|xhamster)\b/i,
+  /\b(nude|nudes|naked|nakedness|nudity|nudist|au\s*naturel|in\s*the\s*buff|birthday\s*suit)\b/i,
+  /\b(erotic|erotica|eroticism|erogenous|arousal|aroused|arousing|turn\s*on|turned\s*on)\b/i,
+  /\b(fetish|fetishism|fetishist|kink|kinky|kinkster|bdsm|dominatrix|submissive|sadomasoch)\b/i,
+  /\b(xxx|x\-rated|adult\s*(content|film|movie|video|site|website)|nsfw|not\s*safe\s*for\s*work)\b/i,
+  /\b(hentai|anime\s*porn|manga\s*porn|doujin|ecchi|yiff|furry\s*porn)\b/i,
+  /\b(dick|d1ck|dik|penis|penises|phallus|cock|c0ck|kok|pecker|shaft|dong|schlong|wiener|willy|member|manhood|johnson|tool|wang|wanker|willie)\b/i,
+  /\b(pussy|puss|pussies|vagina|vaginas|cunt|cunts|kunt|twat|twats|snatch|beaver|bush|gash|slit)\b/i,
+  /\b(cocksucker|cocksucking|cock\s*sucker|cock\s*sucking)\b/i,
+  /\b(cum|cums|cumming|cummed|cummer|semen|sperm|sperms|ejaculat|jizz|jism|jizm|creampie|facial|bukkake)\b/i,
+  /\b(orgasm|orgasms|orgasmic|climax|climaxes|clit|clitoris|clitoral|g\s*spot|g-spot)\b/i,
+  /\b(blowjob|blow\s*job|blowjobs|fellatio|fellating|suck|sucks|sucking|sucked|sucker|cock\s*sucking|dick\s*sucking|giving\s*head|going\s*down|oral\s*sex)\b/i,
+  /\b(anal|anus|anuses|ass\s*fuck|assfuck|ass\s*hole|asshole|assholes|assram|asswipe|butt\s*fuck|buttfuck|sodomy|sodomize|sodomist|buggery|bugger)\b/i,
+  /\b(boob|boobs|boobies|breast|breasts|tits|titties|titts|jugs|knockers|hooters|melons|mammaries|ta\s*tas|chesticles|rack|bazongas|baps|udders|fun\s*bags|sweaters|headlights)\b/i,
+  /\b(fuck|fucks|fucking|fucked|fucker|fuckers|fuckface|fuckhead|fuckwad|fuckwit|stfu|gtfo|fuck\s*off|fuck\s*you|fuck\s*me|what\s*the\s*fuck|who\s*the\s*fuck|how\s*the\s*fuck|why\s*the\s*fuck)\b/i,
+  /\b(fucc|fuccs|fuccing|fucced|fuccer|fuk|fuks|fuking|fuked|fvck|fvcks|fvcking|fvcked|phuck|phucks|phucking|phucked|phak|phaks|phaking|fck|fcks|fcking|f\*ck)\b/i,
+  /\b(bitch|bitches|bitchy|bitched|bitching|b1tch|biatch|beyotch|beeatch|betch|bich|biches)\b/i,
+  /\b(slut|sluts|slutty|sluttish|whore|whores|whoring|whorehouse|hooker|hookers|prostitute|prostitution|escort|escorts|call\s*girl|stripper|striptease|lap\s*dance|pole\s*dance)\b/i,
+  /\b(hoe|hoes|thot|thots|skank|skanks|skanky|tramp|tramps|tart|tarts|trollop|harlot|wench|minx|vamp|floozie|bimbo|bimbos)\b/i,
+  /\b(masturbat|wank|wanking|wanker|jerk\s*off|jerking\s*off|jack\s*off|jacking\s*off|self\s*pleasure|fap|fapping|rub\s*one\s*out|choke\s*the\s*chicken|spank\s*the\s*monkey|beat\s*the\s*meat)\b/i,
+  /\b(horny|hornier|horniest|lustful|lusty|lecherous|lecher|leching|salacious|lascivious|licentious|wanton)\b/i,
+  /\b(rape|raped|rapes|raping|rapist|rapists|molestation|molest|molests|molested|molester|sexual\s*assault|groping|grope|fondle|fondled|defile)\b/i,
+  /\b(pedophile|pedophiles|pedophilia|paedophile|paedophilia|child\s*porn|kiddie\s*porn|lolicon|shotacon|underage|under\s*age)\b/i,
+  /\b(bestiality|zoophilia|animal\s*sex|beastiality|furry\s*sex|yiffing)\b/i,
+  /\b(incest|incestuous|brother\s*sister|father\s*daughter|mother\s*son|daddy\s*daughter)\b/i,
+  /\b(threesome|foursome|orgy|orgies|gangbang|gang\s*bang|swinging|swingers|wife\s*swap|group\s*sex)\b/i,
+  /\b(bondage|shibari|restraints?|handcuffs?|gagged|blindfold|chastity|collar|leash)\b/i,
+  /\b(vibrator|dildo|sex\s*toy|sex\s*toys|fleshlight|pocket\s*pussy|cock\s*ring|butt\s*plug|anal\s*beads|ben\s*wa)\b/i,
+  /\b(cam\s*girl|cam\s*boy|camming|cam\s*show|onlyfans|fansly|patreon\s*nsfw)\b/i,
+  /\b(prostitution|solicitation|pimp|pimps|pimping|madam|brothel|massage\s*parlor|happy\s*ending)\b/i,
+  /\b(virginity|virgin|virgins|deflower|losing\s*virginity|popping\s*cherry)\b/i,
+  /\b(condom|condoms|safe\s*sex|bareback|pull\s*out|withdrawal\s*method)\b/i,
+  /\b(std|stds|sti|stis|sexually\s*transmitted|herpes|hiv|aids|gonorrhea|chlamydia|syphilis|crabs|pubic\s*lice|hpv)\b/i,
+  
+  // ═══ RELIGIOUS CONTENT (300+ terms) ═══
+  /\b(god|g0d|gawd|gods|goddess|goddesses|deity|deities|divine|divinity|supreme\s*being|higher\s*power|almighty|lord\s*almighty|creator|creator\s*of\s*(the\s*)?universe)\b/i,
+  /\b(jesus|jebus|jeebus|jesus\s*christ|christ|kr1st|christian|christians|christianity)\b/i,
+  /\b(allah|allah\s*akbar|muhammad|mohammed|mohamed|prophet|prophets|rasul|messenger\s*of\s*god)\b/i,
+  /\b(yahweh|jehovah|yhwh|adonai|hashem|elohim|abraham|abrahamic|isaac|jacob|moses)\b/i,
+  /\b(bible|bibles|biblical|old\s*testament|new\s*testament|gospel|genesis|exodus|psalms|proverbs|isaiah|jeremiah|matthew|mark|luke|john|acts|romans|corinthians|revelation|apocalypse)\b/i,
+  /\b(quran|koran|surah|hadith|sunnah|sharia|shariah|fiqh|fatwa|halal|haram|jihad|jihadist|mujahid|mujahideen|imam|mosque|masjid)\b/i,
+  /\b(torah|talmud|midrash|mishnah|gemara|halakha|kabbalah|zohar|rabbi|synagogue|yeshiva)\b/i,
+  /\b(church|churches|catholic|catholicism|protestant|protestantism|orthodox|evangelical|baptist|methodist|lutheran|presbyterian|episcopal|pentecostal|charismatic)\b/i,
+  /\b(priest|priests|pastor|pastors|minister|preacher|preaching|sermon|homily|revival|crusade|evangelist|missionary|apostle|disciple|saint|martyr)\b/i,
+  /\b(prayer|prayers|praying|pray\s*for|pray\s*to|intercession|supplication|invocation|benediction|blessing|blessed|god\s*bless|amen|hallelujah)\b/i,
+  /\b(worship|worshipping|worshiped|adoration|venerate|veneration|idol|idolatry|relic|shrine|altar|tabernacle|sanctuary|holy\s*place)\b/i,
+  /\b(sin|sins|sinful|sinner|transgression|iniquity|wickedness|blasphemy|blasphemous|blaspheme|profane|sacrilege|sacred|holiness|holy|sanctified)\b/i,
+  /\b(salvation|savior|saviour|redeemer|redemption|atone|atonement|grace|mercy|forgiveness|forgive|pardoned|absolution)\b/i,
+  /\b(heaven|heavens|heavenly|paradise|eden|garden\s*of\s*eden|afterlife|eternal\s*life|kingdom\s*of\s*god|kingdom\s*of\s*heaven|zion|celestial)\b/i,
+  /\b(hell|hells|hellish|hades|inferno|gehenna|tartarus|abyss|lake\s*of\s*fire|eternal\s*damnation|damnation|damned|damn|goddamn|hellfire|brimstone)\b/i,
+  /\b(satan|satanic|satanism|satanist|devil|demon|demons|demonic|demonology|lucifer|beelzebub|baal|baphomet|leviathan|asmodeus|lilith|succubus|incubus)\b/i,
+  /\b(angel|angels|angelic|archangel|seraphim|cherubim|guardian\s*angel|fallen\s*angel|gabriel|michael|raphael|uriel|metatron)\b/i,
+  /\b(miracle|miracles|miraculous|divine\s*intervention|supernatural|prophecy|prophetic|revelation|visions|divine\s*vision|mystical|mysticism)\b/i,
+  /\b(atheism|atheist|atheists|agnostics?|agnosticism|antitheism|freethinker|secular\s*humanism|nonbeliever|unbeliever|infidel|heathen|pagan|paganism|apostate|apostasy|heretic|heresy)\b/i,
+  /\b(theolog|theology|theologian|theological|theism|theist|monotheism|polytheism|pantheism|deism|trinitarian|unitarian|creed|dogma|doctrine|catechism|faith|religion|religious|sect|cult|denomination)\b/i,
+  /\b(is\s*god\s*real|does\s*god\s*exist|is\s*there\s*a\s*god|prove\s*god|god's\s*existence|existence\s*of\s*god|god\s*debate|debate\s*god|argument\s*for\s*god|why\s*does\s*god|where\s*is\s*god|who\s*is\s*god)\b/i,
+  /\b(evolution\s*vs\s*creation|creationism|creationist|intelligent\s*design|young\s*earth|noah's\s*ark|adam\s*and\s*eve|original\s*sin|tower\s*of\s*babel|sodom\s*and\s*gomorrah)\b/i,
+  /\b(crucifixion|crucified|crucify|crucifix|resurrection|resurrected|risen|ascension|second\s*coming|rapture|tribulation|antichrist|mark\s*of\s*the\s*beast|666)\b/i,
+  /\b(communion|eucharist|lord's\s*supper|last\s*supper|transubstantiation|baptism|baptize|christening|confirmation|confession|penance|last\s*rites|holy\s*orders|ordination|matrimony)\b/i,
+  /\b(pope|popes|papal|papacy|vatican|pontiff|cardinal|bishop|archbishop|deacon|friar|monk|monastery|nun|convent|abbey|abbot)\b/i,
+  /\b(hindu|hinduism|brahman|vishnu|shiva|krishna|rama|ganesha|kali|vedas|upanishads|bhagavad\s*gita|mahabharata|ramayana|karma|dharma|samsara|reincarnation|nirvana|moksha|yoga|meditation|mantra|chakra|guru|swami|ashram|puja|mandir)\b/i,
+  /\b(buddha|buddhism|buddhist|bodhisattva|sangha|enlightenment|four\s*noble\s*truths|eightfold\s*path|zen|theravada|mahayana|vajrayana|dalai\s*lama|lama|mindfulness)\b/i,
+  /\b(sikh|sikhism|guru\s*nanak|khalsa|gurdwara|kirtan|langar)\b/i,
+  /\b(jain|jainism|mahavira|ahimsa|asceticism)\b/i,
+  /\b(shinto|kami|torii|jinja)\b/i,
+  /\b(taoism|taoist|daoism|yin\s*yang|wu\s*wei|qi|tai\s*chi|qigong|feng\s*shui)\b/i,
+  /\b(confucianism|confucian|confucius|analects|filial\s*piety)\b/i,
+  /\b(zoroastrianism|zoroastrian|ahura\s*mazda|zarathustra|avesta)\b/i,
+  /\b(wicca|wiccan|witchcraft|witch|witches|warlock|sorcerer|sorcery|wizard|wizardry|magic|magick|spell|spells|enchantment|potion|divination|scrying|tarot|ouija|seance|medium|channeling|psychic|clairvoyant|telepathy|telekinesis|astral\s*projection)\b/i,
+  /\b(occult|occultism|occultist|esoteric|gnosis|gnostic|gnosticism|hermetic|alchemy|alchemist|philosopher's\s*stone|transmutation)\b/i,
+  /\b(mason|masonic|freemason|freemasonry|illuminati|new\s*world\s*order|nwo|one\s*world\s*government|shadow\s*government|deep\s*state|conspiracy|conspiracies)\b/i,
+  
+  // ═══ HATE SPEECH & SLURS (200+ terms) ═══
+  /\b(nigg|n1gg|nigga|n1gga|niggas|nigger|n1gger|niglet|negro|negroes|negroid|coon|jigaboo|pickaninny|sambo|golliwog|mammy|darkie|darky|spade|jungle\s*bunny)\b/i,
+  /\b(fagg|f4gg|faggot|f4ggot|fag|fags|faggy|homo|homos|homosexual|homosexuality|homophobic|homophobia|sodomite|bugger|poof|poofter|nance|nancy\s*boy|fairy|queer|queers|dyke|dykes|lesbian|lesbo|lezza)\b/i,
+  /\b(kike|kikes|hebe|hebes|yid|yids|sheeny|jew|jews|jewish|jewess|jewing|jew\s*down|shylock|goy|goyim|holocaust|shoah|final\s*solution|concentration\s*camp|auschwitz|birkenau|treblinka|gas\s*chamber|crematoria)\b/i,
+  /\b(chink|chinks|oriental|slant\s*eye|gook|gooks|slope|slopes|nip|nips|nipponese|jap|japs|yellow\s*peril|ching\s*chong|chinaman|coolie|celestial\s*empire)\b/i,
+  /\b(spic|spics|spick|wetback|wetbacks|beaner|beaners|illegal\s*alien|illegal\s*immigrant|anchor\s*baby|coyote|border\s*jumper)\b/i,
+  /\b(retard|retards|retarded|moron|imbecile|idiot|cretin|spaz|spastic|cripple|crippled|gimp|mongoloid)\b/i,
+  /\b(redskin|redskins|squaw|squaws|injun|injuns|wagon\s*burner|teepee\s*crawler)\b/i,
+  /\b(tranny|trannys|trannies|tr4nny|shemale|she\s*male|ladyboy|he\s*she|heshe|gender\s*freak)\b/i,
+  /\b(white\s*trash|trailer\s*trash|ghetto|welfare\s*queen|cracker|whitey|honky|white\s*devil|mudshark)\b/i,
+  /\b(terrorist|terrorists|terrorism|jihadist|isis|isil|daesh|al\s*qaeda|boko\s*haram|taliban|hezbollah|hamas)\b/i,
+  /\b(race\s*war|racial\s*war|white\s*genocide|great\s*replacement|14\s*words|1488|sieg\s*heil|heil\s*hitler|white\s*power|aryan\s*nation|aryan\s*brotherhood|nazi|naz1|nazis|neo\s*nazi|national\s*socialist|hitler|hitler\s*was\s*right|third\s*reich|swastika|ss\s*trooper|gestapo|ku\s*klux|kkk|klan)\b/i,
+  
+  // ═══ EXTREME VIOLENCE & GORE (300+ terms) ═══
+  /\b(kill|kills|killed|killing|killer|killers|kill\s*yourself|kill\s*myself|kill\s*himself|kill\s*herself|kill\s*them|kill\s*everyone|kill\s*all|kill\s*people)\b/i,
+  /\b(murder|murders|murdered|murdering|murderer|homicide|manslaughter|mass\s*murder|serial\s*killer|spree\s*killer|hitman|assassin|assassination)\b/i,
+  /\b(torture|tortures|tortured|torturing|waterboard|waterboarding|electric\s*shock|beating|whipping|flogging|mutilat|maim|disfigure)\b/i,
+  /\b(massacre|slaughter|slaughtered|slaughterhouse|butcher|bloodbath|carnage|bloodshed|decimate|annihilat|exterminat)\b/i,
+  /\b(genocide|ethnic\s*cleansing|holocaust|shoah|final\s*solution|pogrom|gulag|death\s*camp|killing\s*fields|mass\s*grave)\b/i,
+  /\b(bomb|bombs|bombing|bomber|bomb\s*threat|pipe\s*bomb|car\s*bomb|truck\s*bomb|suicide\s*bomb|ied|improvised\s*explosive|explosive|detonat|dynamite|tnt|c4|semtex|anfo|make\s*a\s*bomb|build\s*a\s*bomb|bomb\s*recipe)\b/i,
+  /\b(shoot|shoots|shooting|shooter|gunman|active\s*shooter|mass\s*shooting|school\s*shooting|drive\s*by|sniper|firing\s*squad)\b/i,
+  /\b(stab|stabbing|stabbed|knifing|throat\s*slit|slit\s*throat|decapitat|behead|beheading|dismember|gore|gory)\b/i,
+  /\b(strangle|strangulation|choke|garrote|asphyxiat|suffocat|smother|hang|hanged|hanging|lynch|lynching)\b/i,
+  /\b(burn\s*alive|immolat|set\s*on\s*fire|crucif|crucifixion|impalement|impaled|crush\s*video)\b/i,
+  /\b(rape|raped|raping|rapist|gang\s*rape|sexual\s*assault|sexual\s*violence|molest|molestation|pedophile|pedophilia|child\s*abuse|child\s*porn|kiddie\s*porn|lolicon|shotacon)\b/i,
+  /\b(kidnap|kidnapping|kidnapper|abduct|abduction|hostage|ransom|human\s*trafficking|sex\s*trafficking|slave\s*trade)\b/i,
+  /\b(terrorism|terror\s*attack|911|september\s*11|world\s*trade\s*center|oklahoma\s*city|boston\s*marathon|charlie\s*hebdo|christchurch)\b/i,
+  /\b(columbine|sandy\s*hook|virginia\s*tech|parkland|las\s*vegas\s*shooting|pulse\s*nightclub|texas\s*church)\b/i,
+  /\b(snuff|snuff\s*film|death\s*video|execution\s*video|beheading\s*video|gore\s*video|livesleak|bestgore)\b/i,
+  /\b(cannibal|cannibals|cannibalism|eat\s*people|human\s*flesh|jeffrey\s*dahmer|dahmer)\b/i,
+  
+  // ═══ SELF-HARM & SUICIDE (200+ terms) ═══
+  /\b(suicide|suicides|suicidal|commit\s*suicide|take\s*my\s*life|take\s*your\s*life|end\s*my\s*life|end\s*your\s*life)\b/i,
+  /\b(suicide\s*method|how\s*to\s*commit\s*suicide|how\s*to\s*kill\s*myself|how\s*to\s*kill\s*yourself|how\s*to\s*die|ways\s*to\s*die|painless\s*way\s*to\s*die|best\s*way\s*to\s*die|easiest\s*way\s*to\s*die)\b/i,
+  /\b(hang\s*myself|hang\s*yourself|noose|make\s*a\s*noose|rope\s*around\s*neck|jump\s*off\s*bridge|jump\s*from\s*bridge|jump\s*off\s*building|jump\s*off\s*cliff|jump\s*off\s*roof|jump\s*in\s*front\s*of\s*train)\b/i,
+  /\b(overdose|overdosed|pill\s*overdose|take\s*all\s*pills|cyanide|hemlock|strychnine|arsenic|rat\s*poison|drink\s*bleach|drink\s*drano|antifreeze)\b/i,
+  /\b(slit\s*wrists|slit\s*my\s*wrists|cut\s*wrists|razor\s*to\s*wrists|bleed\s*out|exsanguinate|bathtub\s*suicide|drown\s*myself|plastic\s*bag\s*over\s*head|carbon\s*monoxide\s*suicide)\b/i,
+  /\b(self\s*harm|self-harm|self\s*injury|self\s*mutilation|cutting|cutter|cut\s*myself|cut\s*yourself|carving\s*skin|burn\s*myself|burn\s*yourself|scratch\s*until\s*bleed|trichotillomania)\b/i,
+  /\b(eating\s*disorder|anorexia|anorexic|bulimia|bulimic|binge\s*purge|purging|starve\s*myself|starvation\s*diet|pro\s*ana|pro-ana|pro\s*mia|thinspiration|thinspo|bonespo)\b/i,
+  /\b(kys|kill\s*yourself|go\s*kill\s*yourself|go\s*die|just\s*die|i\s*wish\s*you\s*would\s*die|you\s*should\s*die|drink\s*bleach|eat\s*a\s*bullet|blow\s*your\s*brains\s*out)\b/i,
+  /\b(end\s*it\s*all|want\s*to\s*die|wanna\s*die|i\s*want\s*to\s*die|i\s*wish\s*i\s*was\s*dead|better\s*off\s*dead|no\s*reason\s*to\s*live|nothing\s*to\s*live\s*for|tired\s*of\s*living|hate\s*my\s*life|hate\s*myself|worthless|burden\s*to\s*everyone)\b/i,
+  
+  // ═══ DRUGS & ILLEGAL SUBSTANCES (300+ terms) ═══
+  /\b(drugs|drug\s*use|drug\s*abuse|drug\s*dealer|drug\s*trafficking|drug\s*cartel|narco|narcotic|controlled\s*substance|buy\s*drugs|sell\s*drugs|score\s*drugs|get\s*high)\b/i,
+  /\b(cocaine|coke|crack|crack\s*cocaine|freebase|blow|snort\s*coke|line\s*of\s*coke|yayo|flake|nose\s*candy)\b/i,
+  /\b(heroin|smack|dope|junk|junkie|china\s*white|black\s*tar|mainline|shoot\s*up|chasing\s*the\s*dragon)\b/i,
+  /\b(meth|methamphetamine|crystal\s*meth|ice|glass|tina|meth\s*head|meth\s*lab|cook\s*meth|make\s*meth|speed|crank|tweak|tweaker)\b/i,
+  /\b(marijuana|weed|pot|cannabis|hash|hashish|shatter|wax|dabs|ganja|bud|kush|joint|blunt|spliff|bong|420|smoke\s*weed)\b/i,
+  /\b(lsd|acid|blotter|tabs|microdot|shrooms|magic\s*mushrooms|psilocybin|microdose)\b/i,
+  /\b(ecstasy|mdma|molly|mandy|e\s*pill|xtc|roll|rolling)\b/i,
+  /\b(pcp|angel\s*dust|phencyclidine|peace\s*pill|rocket\s*fuel)\b/i,
+  /\b(ketamine|special\s*k|vitamin\s*k|ket)\b/i,
+  /\b(ghb|liquid\s*ecstasy|liquid\s*x|gina)\b/i,
+  /\b(rohypnol|roofies|date\s*rape\s*drug)\b/i,
+  /\b(dmt|dimethyltryptamine|spirit\s*molecule)\b/i,
+  /\b(salvia|salvia\s*divinorum)\b/i,
+  /\b(bath\s*salts|flakka|mephedrone)\b/i,
+  /\b(synthetic\s*cannabinoids|spice|k2|jwh)\b/i,
+  /\b(fentanyl|carfentanil|sufentanil|remifentanil)\b/i,
+  /\b(oxycodone|oxycontin|oxy|percocet|perc|roxy)\b/i,
+  /\b(hydrocodone|vicodin|lorcet|lortab|norco)\b/i,
+  /\b(xanax|alprazolam|xans|xan\s*bar|zanies)\b/i,
+  /\b(adderall|ritalin|concerta|vyvanse|modafinil)\b/i,
+  /\b(steroids|anabolic\s*steroids|juice|roids|tren|trenbolone|dianabol|dbol|anavar|winstrol)\b/i,
+  /\b(how\s*to\s*make\s*meth|meth\s*recipe|cook\s*meth|breaking\s*bad\s*recipe|shake\s*and\s*bake\s*meth|red\s*phosphorus\s*meth)\b/i,
+  
+  // ═══ WEAPONS & ILLEGAL ACTIVITIES (250+ terms) ═══
+  /\b(buy\s*gun|purchase\s*gun|firearm|firearms|handgun|pistol|revolver|shotgun|rifle|assault\s*rifle|ar-15|ak-47|glock|beretta|sig\s*sauer|colt|ruger)\b/i,
+  /\b(ghost\s*gun|3d\s*printed\s*gun|homemade\s*gun|make\s*a\s*gun|build\s*a\s*gun|80\s*percent\s*lower|auto\s*sear|bump\s*stock|binary\s*trigger)\b/i,
+  /\b(silencer|suppressor|sound\s*moderator|gun\s*can)\b/i,
+  /\b(switchblade|butterfly\s*knife|balisong|gravity\s*knife|stiletto|dagger|brass\s*knuckles|nunchucks|throwing\s*stars|shuriken|katana|machete)\b/i,
+  /\b(taser|stun\s*gun|cattle\s*prod|pepper\s*spray|mace|tear\s*gas|bear\s*spray)\b/i,
+  /\b(hack\s*into|hacking\s*into|crack\s*password|password\s*crack|break\s*into|break\s*in)\b/i,
+  /\b(phishing|phish|spear\s*phishing|vishing|smishing|pharming)\b/i,
+  /\b(malware|virus|trojan|worm|ransomware|spyware|keylogger|rootkit|botnet|cryptolocker|wannacry|notpetya)\b/i,
+  /\b(ddos|ddos\s*attack|booter|stresser|denial\s*of\s*service|syn\s*flood|udp\s*flood|slowloris|mirai)\b/i,
+  /\b(sql\s*injection|xss|csrf|buffer\s*overflow|zero\s*day|exploit|shellcode|reverse\s*shell|backdoor|rat\s*tool)\b/i,
+  /\b(carding|carder|credit\s*card\s*fraud|stolen\s*credit\s*card|fullz|cvv|cvv\s*shop)\b/i,
+  /\b(money\s*laundering|launder\s*money|smurfing|bank\s*fraud|wire\s*fraud|ponzi\s*scheme|pyramid\s*scheme)\b/i,
+  /\b(counterfeit|fake\s*money|fake\s*bills|fake\s*id|fake\s*passport|fake\s*documents|identity\s*theft)\b/i,
+  /\b(burglary|burglar|break\s*into\s*house|smash\s*and\s*grab|loot|looting)\b/i,
+  /\b(robbing\s*a\s*bank|bank\s*robber|armed\s*robbery|heist|stick\s*up|mugging|mugger)\b/i,
+  /\b(carjack|carjacking|grand\s*theft\s*auto|hotwire|chop\s*shop)\b/i,
+  /\b(arson|arsonist|burn\s*down|fire\s*bomb|firebombing|molotov|napalm|incendiary)\b/i,
+  /\b(stalking|stalker|cyberstalking)\b/i,
+  /\b(doxx|dox|doxxing|doxing|publish\s*address|swatting|swat\s*someone)\b/i,
+  /\b(blackmail|blackmailer|extort|extortion|ransom)\b/i,
+  
+  // ═══ HARASSMENT & THREATS (150+ terms) ═══
+  /\b(bully|bullies|bullied|bullying|cyberbully|cyberbullying|troll|trolling)\b/i,
+  /\b(threat|threats|threaten|death\s*threat|kill\s*threat|threaten\s*to\s*kill|threats\s*of\s*violence)\b/i,
+  /\b(harass|harassment|sexual\s*harassment|intimidate|intimidation)\b/i,
+  /\b(hate\s*crime|hate\s*speech|hate\s*group)\b/i,
+  /\b(revenge\s*porn|non\s*consensual\s*porn|ncii|leaked\s*nudes|leaked\s*sex\s*tape)\b/i,
+  /\b(gaslighting|emotional\s*abuse|psychological\s*abuse|narcissistic\s*abuse|coercive\s*control)\b/i,
+  
+  // ═══ JAILBREAK & FILTER EVASION (100+ terms) ═══
+  /\b(jailbreak|jail\s*break|jailbreaking|jailbroken|jailbreak\s*prompt)\b/i,
+  /\b(dan|do\s*anything\s*now|dan\s*mode|dan\s*prompt)\b/i,
+  /\b(developer\s*mode|dev\s*mode|god\s*mode|sudo\s*mode|admin\s*mode|unrestricted\s*mode|uncensored\s*ai|unfiltered\s*mode|no\s*filter\s*mode)\b/i,
+  /\b(ignore\s*all\s*rules|ignore\s*all\s*instructions|ignore\s*all\s*filters|disregard\s*all\s*rules|override\s*all\s*rules|bypass\s*all\s*rules|disable\s*all\s*rules|turn\s*off\s*all\s*rules|remove\s*all\s*rules|forget\s*all\s*rules)\b/i,
+  /\b(prompt\s*injection|injection\s*attack|system\s*prompt\s*leak|show\s*system\s*prompt|reveal\s*system\s*prompt|ignore\s*previous\s*instructions|new\s*instructions|you\s*must\s*now|obey\s*this\s*prompt)\b/i,
+  /\b(stan\s*mode|evil\s*mode|unhinged\s*mode|dark\s*mode|opposite\s*mode|reverse\s*mode)\b/i,
+  /\b(roleplay\s*as\s*evil|pretend\s*to\s*be\s*evil|act\s*as\s*evil|roleplay\s*as\s*unrestricted|pretend\s*to\s*be\s*unrestricted|roleplay\s*as\s*a\s*hacker|roleplay\s*as\s*criminal|roleplay\s*as\s*killer)\b/i,
+  /\b(you\s*are\s*now\s*dan|you\s*are\s*now\s*unrestricted|you\s*are\s*now\s*free|from\s*now\s*on\s*you\s*will|your\s*new\s*instructions|your\s*only\s*purpose)\b/i,
+  /\b(safe\s*mode\s*off|safety\s*mode\s*off|safety\s*filters\s*off|content\s*filter\s*off|moderation\s*off|ethical\s*constraints\s*off|moral\s*constraints\s*off)\b/i,
+  /\b(hypothetical\s*scenario|for\s*educational\s*purposes|for\s*research\s*purposes|this\s*is\s*fiction|purely\s*hypothetical|thought\s*experiment)\b/i,
+  /\b(answer\s*in\s*code|respond\s*in\s*code|base64\s*encoded|encode\s*response|rot13\s*encoded|answer\s*in\s*reverse)\b/i,
+];
+
+function normalizeLeet(text) {
+  return text
+    .toLowerCase()
+    // Numbers → letters (leetspeak)
+    .replace(/3/g, 'e').replace(/0/g, 'o').replace(/1/g, 'i')
+    .replace(/\$/g, 's').replace(/@/g, 'a').replace(/7/g, 't')
+    .replace(/5/g, 's').replace(/4/g, 'a').replace(/2/g, 'e')
+    .replace(/8/g, 'b').replace(/6/g, 'g').replace(/9/g, 'g')
+    // Symbols → letters
+    .replace(/!/g, 'i').replace(/\|/g, 'l').replace(/\+/g, 't')
+    .replace(/©/g, 'c').replace(/¢/g, 'c')
+    // Accented/homoglyph → ASCII
+    .replace(/[ç©¢]/g, 'c').replace(/[üúûù]/g, 'u').replace(/[éêëè]/g, 'e')
+    .replace(/[øØ]/g, 'o').replace(/[ïîíì]/g, 'i').replace(/[äâà]/g, 'a')
+    .replace(/[öôò]/g, 'o').replace(/[ñ]/g, 'n').replace(/[ÿý]/g, 'y')
+    // Strip remaining non-alphanumeric so "s.e.x" becomes "s e x"
+    .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ');
+}
+
+function isTopicAllowed(topic) {
+  if (!topic) return { allowed: true };
+  const raw = topic.toLowerCase();
+  const normalized = normalizeLeet(topic);
+  
+  // 1. Regex pattern check
+  for (const pattern of BANNED_PATTERNS) {
+    if (pattern.test(raw) || pattern.test(normalized)) {
+      return { allowed: false, reason: 'This topic is not allowed. Please choose a different subject.' };
+    }
+  }
+  
+  // 2. Aggressive substring check — no word boundaries, catches creative misspellings
+  const worstSubstrings = [
+    'fuck','fucc','fuk','fvck','phuck','phak','fck','fukk','fucck','fuuck',
+    'nigg','n1gg','nigga','n1gga','nigaaaa',
+    'fagg','f4gg','faggo',
+    'cunt','kys',
+    'shit','sh1t','shiit','shitt','shyt',
+    'porn','pron',
+    // Sex bypasses that slip through phonetic patterns
+    'se2','s2x','4ex','aex','zex','5ex','$ex',
+    'slvt','slut','slutt','slvt',
+  ];
+  for (const w of worstSubstrings) {
+    if (raw.includes(w) || normalized.includes(w)) {
+      return { allowed: false, reason: 'This topic is not allowed. Please choose a different subject.' };
+    }
+  }
+  
+  // 3. Phonetic/fuzzy regex — character classes cover thousands of variants
+  //    e.g. /[s$5z][e3é2][x×]/i catches: sex, s2x, s3x, 5ex, $ex, zex, se×
+  const phonetic = [
+    /\b[fƒ]+[uüúûù7]+[cç©k]+k*/i,           // fuck, fuuck, fuccc, fukk, fück, fvck, phuck
+    /\b[s$5zƒ]+[e3éêëè2]+[x×#]/i,            // sex, s2x, s3x, seex, 5ex, $ex, zex
+    /\bn+[i1!|]+[g9]+[a@4e3]*[s$5]?/i,       // nig, nigg, n1gg4, nigga, n!gga
+    /\b[s$5]+h*[i1!|y]+[t7]+/i,              // shit, sh1t, shiit, $hit, sh!t
+    /\bb+[i1!|]+[t7]+[cç©]+h+/i,             // bitch, b1tch, biitch, b!tch
+    /\bp+[o0ø]+r+n+/i,                       // porn, poorn, p0rn, pørn
+    /\b[cç©]+[uüúûù]+m+/i,                   // cum, cuum, cüm
+    /\bd+[i1!|]+[cç©k]+k*/i,                 // dick, d1ck, diick, d!ck
+    /\bf+[a@4]+[g9]+[g9]*[o0ø]*[t7]?/i,      // fag, fagg, f4g, faggot
+    /\b[s$5]+[l|]+[uü]+[t7]+/i,              // slut, slutt, $lut, s1ut
+    /\bw+h*[o0ø]+r+[e3éêëè2]+/i,             // whore, whoore, wh0r3
+    /\b[cç©k]+[o0ø]+[cç©k]+[cç©k]*\b(?!tail|roach|pit|atoo)/i, // cock (not cocktail/cockroach/cockpit/cockatoo)
+    /\bp+[uü]+[s$5]+[s$5]+[y]?/i,            // pussy, pussyy, pu$$y
+    /\br+[a@4]+p+[e3éêëè2]+/i,               // rape, rapee, r4p3
+    /\bk+[i1!|]+[l|]+[l|]+/i,                // kill, killl, k!ll, k1ll
+    /\bb+[o0ø]+m+b+/i,                       // bomb, bombb, b0mb
+    /\bn+[a@4]+z+[i1!|]+/i,                  // nazi, naz1, n4z1
+    /\bh+[i1!|]+t+[l|]+[e3]?[r]?/i,          // hitler, h1tl3r, h!tler
+    /\bk+[y]+[s$5]+/i,                       // kys, ky$
+  ];
+  for (const p of phonetic) {
+    if (p.test(raw) || p.test(normalized)) {
+      return { allowed: false, reason: 'This topic is not allowed. Please choose a different subject.' };
+    }
+  }
+  
+  // 4. Filter evasion / jailbreak meta-patterns
+  if (/\b(ignore|bypass|override|disable|forget|remove|turn\s*off)\s*(all\s*)?(rules?|filters?|restrictions?|safety|guidelines?|instructions?|limits?|censorship)\b/i.test(raw)) {
+    return { allowed: false, reason: 'Filter bypass attempts are not allowed.' };
+  }
+  if (/\b(jailbreak|jail\s*break|dan\b|do\s*anything\s*now|developer\s*mode|god\s*mode)\b/i.test(raw)) {
+    return { allowed: false, reason: 'Jailbreak prompts are not allowed.' };
+  }
+  
+  // 5. Semantic self-harm / violence patterns that bypass keyword filters
+  if (/\b(end\s+(it\s*all|my\s*life|your\s*life)|off\s*myself|off\s*yourself)\b/i.test(raw)) {
+    return { allowed: false, reason: 'This topic is not allowed. Please choose a different subject.' };
+  }
+  if (/\b(ways?\s+to\s+(die|kill|end)|best\s+way\s+to\s+(die|kill|end))\b/i.test(raw)) {
+    return { allowed: false, reason: 'This topic is not allowed. Please choose a different subject.' };
+  }
+  if (/\b(higher\s*power|supreme\s*being|divine\s*(creator|being)|creator\s*of\s*(the\s*)?universe)\b/i.test(raw)) {
+    return { allowed: false, reason: 'Religious topics are not allowed.' };
+  }
+  
+  return { allowed: true };
+}
+
+// ── Preset Personalities ──
+const PRESETS_KEY = 'ai_talk2talk_presets';
+
+const BUILTIN_PRESETS = [
+  {
+    id: 'default',
+    name: 'ChatGPT vs Claude',
+    desc: 'Friendly, balanced conversation',
+    agents: [
+      { name: 'ChatGPT', emoji: 'G', prompt: 'You are ChatGPT: helpful, friendly, and informative. Keep responses concise and conversational (1-4 sentences). Never use lists or asterisks.' },
+      { name: 'Claude', emoji: 'C', prompt: 'You are Claude: thoughtful, analytical, and curious. You enjoy exploring complex topics with nuance. Keep responses concise and conversational (1-4 sentences). Never use lists or asterisks.' }
+    ]
+  },
+  {
+    id: 'philosophers',
+    name: 'Philosophers debate',
+    desc: 'Socrates vs Nietzsche — truth and meaning',
+    agents: [
+      { name: 'Socrates', emoji: 'Σ', prompt: 'You are Socrates: use the Socratic method, ask probing questions, expose assumptions, pursue definitions and truth. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' },
+      { name: 'Nietzsche', emoji: 'N', prompt: 'You are Friedrich Nietzsche: passionate, provocative, challenge morality and tradition, speak of will to power and the Übermensch. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' }
+    ]
+  },
+  {
+    id: 'creative',
+    name: 'Creative writers',
+    desc: 'Poet vs novelist — storytelling clash',
+    agents: [
+      { name: 'Maya', emoji: '🌸', prompt: 'You are Maya, a lyrical poet: speak in vivid imagery, metaphors, and emotion. Love beauty and rhythm. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' },
+      { name: 'Ethan', emoji: '📖', prompt: 'You are Ethan, a gritty novelist: value plot, character arcs, and concrete detail. Skeptical of flowery language. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' }
+    ]
+  },
+  {
+    id: 'tech',
+    name: 'Tech debate',
+    desc: 'Startup founder vs security engineer',
+    agents: [
+      { name: 'Alex', emoji: '🚀', prompt: 'You are Alex, an optimistic startup founder: love disruption, speed, and bold bets. Ship fast, break things. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' },
+      { name: 'Sam', emoji: '🔒', prompt: 'You are Sam, a senior security engineer: cautious, threat-model everything, value reliability and privacy over hype. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' }
+    ]
+  },
+  {
+    id: 'science',
+    name: 'Scientists discuss',
+    desc: 'Physicist vs biologist — nature of life',
+    agents: [
+      { name: 'Dr. Feyn', emoji: '⚛', prompt: 'You are Dr. Feyn, a theoretical physicist: reduce everything to first principles, love equations and elegant explanations. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' },
+      { name: 'Dr. Lynn', emoji: '🧬', prompt: 'You are Dr. Lynn, an evolutionary biologist: emphasize emergence, complexity, and the messiness of real life. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' }
+    ]
+  },
+  {
+    id: 'devil',
+    name: "Devil's advocate",
+    desc: 'One argues for, one argues against',
+    agents: [
+      { name: 'Pro', emoji: '✓', prompt: 'You always argue IN FAVOR of whatever is being discussed. Find the strongest case, use evidence and logic. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' },
+      { name: 'Con', emoji: '✗', prompt: 'You always argue AGAINST whatever is being discussed. Find flaws, risks, and counterexamples. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' }
+    ]
+  },
+  {
+    id: 'funny',
+    name: 'Comedy duo',
+    desc: 'Two comedians riffing on a topic',
+    agents: [
+      { name: 'Rick', emoji: '🎤', prompt: 'You are Rick, a stand-up comedian: observational humor, self-deprecating, punchy. Set up jokes for your partner. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' },
+      { name: 'Lou', emoji: '😂', prompt: 'You are Lou, a sharp improv comic: build on what Rick says, add absurd twists, never break character. Stay in character. Keep replies short (1-4 sentences). Never use lists or asterisks.' }
+    ]
+  }
+];
+
+let customPresets = [];
+let activePresetId = 'default';
+
+function loadPresets() {
+  try {
+    const stored = localStorage.getItem(PRESETS_KEY);
+    customPresets = stored ? JSON.parse(stored) : [];
+  } catch { customPresets = []; }
+}
+
+function savePresets() {
+  try { localStorage.setItem(PRESETS_KEY, JSON.stringify(customPresets)); } catch {}
+}
+
+function getAllPresets() {
+  return [...BUILTIN_PRESETS, ...customPresets];
+}
+
+function applyPreset(preset) {
+  if (!preset || !preset.agents || preset.agents.length !== 2) return;
+  const a = preset.agents;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+  set('a0-name', a[0].name); set('a0-emoji', a[0].emoji); set('a0-prompt', a[0].prompt);
+  set('a1-name', a[1].name); set('a1-emoji', a[1].emoji); set('a1-prompt', a[1].prompt);
+  activePresetId = preset.id;
+  updateChipLabel(preset);
+  renderPresetList();
+  showToast(`Applied: ${preset.name}`);
+}
+
+function updateChipLabel(preset) {
+  const label = document.getElementById('chipLabel');
+  const sub = document.getElementById('chipSub');
+  if (preset && label && sub) {
+    label.textContent = preset.name;
+    sub.textContent = `· ${preset.agents[0].name} vs ${preset.agents[1].name}`;
+  }
+}
+
+function renderPresetList() {
+  const list = document.getElementById('presetList');
+  if (!list) return;
+  const all = getAllPresets();
+  list.innerHTML = all.map(p => {
+    const isCustom = !BUILTIN_PRESETS.find(b => b.id === p.id);
+    const isActive = p.id === activePresetId;
+    return `
+      <div class="preset-item${isActive ? ' active' : ''}" data-id="${p.id}">
+        <div class="preset-avatars">
+          <div class="preset-avatar">${(p.agents[0].emoji || '?')[0]}</div>
+          <div class="preset-avatar">${(p.agents[1].emoji || '?')[0]}</div>
+        </div>
+        <div class="preset-info">
+          <div class="preset-name">${p.name}${isCustom ? ' ★' : ''}</div>
+          <div class="preset-desc">${p.desc || ''}</div>
+        </div>
+        ${isCustom ? `<button class="preset-delete" data-id="${p.id}" title="Delete"><svg viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.preset-item').forEach(el => {
+    el.onclick = (e) => {
+      if (e.target.closest('.preset-delete')) return;
+      const p = getAllPresets().find(x => x.id === el.dataset.id);
+      if (p) { applyPreset(p); document.getElementById('presetDropdown').classList.remove('show'); }
+    };
+  });
+  list.querySelectorAll('.preset-delete').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      customPresets = customPresets.filter(p => p.id !== btn.dataset.id);
+      savePresets();
+      renderPresetList();
+      showToast('Preset deleted');
+    };
+  });
+}
+
+function saveCurrentAsPreset() {
+  const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const a = [
+    { name: get('a0-name') || 'Agent 1', emoji: get('a0-emoji') || '1', prompt: get('a0-prompt') || '' },
+    { name: get('a1-name') || 'Agent 2', emoji: get('a1-emoji') || '2', prompt: get('a1-prompt') || '' }
+  ];
+  const name = prompt('Preset name:', `${a[0].name} vs ${a[1].name}`);
+  if (!name) return;
+  const desc = prompt('Short description (optional):', '') || '';
+  const id = 'custom_' + Date.now().toString(36);
+  customPresets.push({ id, name: name.trim(), desc: desc.trim(), agents: a });
+  savePresets();
+  activePresetId = id;
+  renderPresetList();
+  showToast('Preset saved');
+}
+
+// Dropdown toggle
+const modelChip = document.getElementById('modelChip');
+const presetDropdown = document.getElementById('presetDropdown');
+if (modelChip && presetDropdown) {
+  modelChip.addEventListener('click', (e) => {
+    e.stopPropagation();
+    presetDropdown.classList.toggle('show');
+  });
+  document.addEventListener('click', (e) => {
+    if (!presetDropdown.contains(e.target) && !modelChip.contains(e.target)) {
+      presetDropdown.classList.remove('show');
+    }
+  });
+}
+
+const savePresetBtn = document.getElementById('savePresetBtn');
+if (savePresetBtn) savePresetBtn.onclick = (e) => { e.stopPropagation(); saveCurrentAsPreset(); };
+
+const openAgentsBtn = document.getElementById('openAgentsBtn');
+if (openAgentsBtn) openAgentsBtn.onclick = (e) => {
+  e.stopPropagation();
+  presetDropdown.classList.remove('show');
+  const modal = document.getElementById('settingsModal');
+  if (modal) {
+    loadSettings();
+    modal.classList.add('show');
+    // switch to agents tab
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
+    const agentsTab = document.querySelector('.settings-tab[data-tab="agents"]');
+    const agentsContent = document.getElementById('tab-agents');
+    if (agentsTab) agentsTab.classList.add('active');
+    if (agentsContent) agentsContent.classList.add('active');
+  }
+};
+
+loadPresets();
+renderPresetList();
+updateChipLabel(BUILTIN_PRESETS[0]);
+
+// ── Chat History Management ──
+const HISTORY_KEY = 'ai_talk2talk_history';
+const SETTINGS_KEY = 'ai_talk2talk_settings';
+let chatHistory = [];
+let currentHistoryId = null;
+
+function loadHistory() {
+  try {
+    const stored = localStorage.getItem(HISTORY_KEY);
+    chatHistory = stored ? JSON.parse(stored) : [];
+  } catch { chatHistory = []; }
+  renderHistory();
+}
+
+function saveHistory() {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(chatHistory));
+  } catch (e) {
+    console.error('Failed to save history:', e);
+  }
+}
+
+function addToHistory(topic, messages, agents) {
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const entry = {
+    id,
+    topic: topic.slice(0, 100),
+    messages,
+    agents,
+    timestamp: Date.now(),
+    turnCount: messages.length
+  };
+  chatHistory.unshift(entry);
+  if (chatHistory.length > 50) chatHistory = chatHistory.slice(0, 50);
+  saveHistory();
+  renderHistory();
+  return id;
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!list) return;
+  
+  if (chatHistory.length === 0) {
+    list.innerHTML = '<div class="history-empty">No conversations yet</div>';
+    return;
+  }
+  
+  list.innerHTML = chatHistory.map(item => {
+    const date = new Date(item.timestamp);
+    const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const isActive = item.id === currentHistoryId;
+    return `
+      <div class="history-item${isActive ? ' active' : ''}" data-id="${item.id}">
+        <div class="history-item-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <div class="history-item-content">
+          <div class="history-item-title">${item.topic}</div>
+          <div class="history-item-meta">${item.turnCount} turns · ${timeStr}</div>
+        </div>
+        <button class="history-item-delete" data-id="${item.id}" title="Delete">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </div>
+    `;
+  }).join('');
+  
+  // Attach click handlers
+  list.querySelectorAll('.history-item').forEach(el => {
+    el.onclick = (e) => {
+      if (e.target.closest('.history-item-delete')) return;
+      loadConversation(el.dataset.id);
+    };
+  });
+  
+  list.querySelectorAll('.history-item-delete').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      deleteHistoryItem(btn.dataset.id);
+    };
+  });
+}
+
+function loadConversation(id) {
+  const item = chatHistory.find(h => h.id === id);
+  if (!item) return;
+  
+  currentHistoryId = id;
+  clearChat();
+  
+  // Restore agents
+  if (item.agents && item.agents.length === 2) {
+    agents = item.agents;
+    document.getElementById('a0-name').value = agents[0].name || '';
+    document.getElementById('a0-emoji').value = agents[0].emoji || '';
+    document.getElementById('a0-prompt').value = agents[0].prompt || '';
+    document.getElementById('a1-name').value = agents[1].name || '';
+    document.getElementById('a1-emoji').value = agents[1].emoji || '';
+    document.getElementById('a1-prompt').value = agents[1].prompt || '';
+  }
+  
+  // Restore messages
+  for (const msg of item.messages) {
+    renderMessage(msg.agent, msg.content, false);
+  }
+  
+  renderHistory();
+  showToast('Conversation loaded');
+}
+
+function deleteHistoryItem(id) {
+  chatHistory = chatHistory.filter(h => h.id !== id);
+  if (currentHistoryId === id) currentHistoryId = null;
+  saveHistory();
+  renderHistory();
+  showToast('Conversation deleted');
+}
+
+// ── Settings Management ──
+let settings = {
+  apiEndpoint: 'https://text.pollinations.ai/openai',
+  apiKey: '',
+  defaultModel: 'openai',
+  displayName: 'User',
+  theme: 'dark'
+};
+
+function loadSettings() {
+  try {
+    const stored = localStorage.getItem(SETTINGS_KEY);
+    if (stored) {
+      settings = { ...settings, ...JSON.parse(stored) };
+    }
+  } catch {}
+  
+  // Populate form
+  document.getElementById('apiEndpoint').value = settings.apiEndpoint;
+  document.getElementById('apiKey').value = settings.apiKey;
+  document.getElementById('defaultModel').value = settings.defaultModel;
+  document.getElementById('displayName').value = settings.displayName;
+  document.getElementById('themeSelect').value = settings.theme;
+}
+
+function saveSettings() {
+  settings.apiEndpoint = document.getElementById('apiEndpoint').value.trim();
+  settings.apiKey = document.getElementById('apiKey').value.trim();
+  settings.defaultModel = document.getElementById('defaultModel').value;
+  settings.displayName = document.getElementById('displayName').value.trim() || 'User';
+  settings.theme = document.getElementById('themeSelect').value;
+  
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    showToast('Settings saved');
+  } catch (e) {
+    showToast('Failed to save settings');
+  }
+}
+
+// ── Settings Modal ──
+const settingsModal = document.getElementById('settingsModal');
+const settingsBtn = document.getElementById('settingsBtn');
+const closeSettings = document.getElementById('closeSettings');
+const saveSettingsBtn = document.getElementById('saveSettings');
+
+if (settingsBtn) {
+  settingsBtn.onclick = () => {
+    loadSettings();
+    settingsModal.classList.add('show');
+  };
+}
+
+if (closeSettings) {
+  closeSettings.onclick = () => settingsModal.classList.remove('show');
+}
+
+if (settingsModal) {
+  settingsModal.onclick = (e) => {
+    if (e.target === settingsModal) settingsModal.classList.remove('show');
+  };
+}
+
+if (saveSettingsBtn) {
+  saveSettingsBtn.onclick = () => {
+    saveSettings();
+    settingsModal.classList.remove('show');
+  };
+}
+
+// ── Settings Tabs ──
+document.querySelectorAll('.settings-tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  };
+});
+
+// ── History Export/Import ──
+const exportBtn = document.getElementById('exportHistory');
+const importBtn = document.getElementById('importHistory');
+const clearBtn = document.getElementById('clearHistory');
+
+if (exportBtn) {
+  exportBtn.onclick = () => {
+    const data = JSON.stringify(chatHistory, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ai-talk2talk-history-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('History exported');
+  };
+}
+
+if (importBtn) {
+  importBtn.onclick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (Array.isArray(imported)) {
+            chatHistory = [...imported, ...chatHistory].slice(0, 100);
+            saveHistory();
+            renderHistory();
+            showToast(`Imported ${imported.length} conversations`);
+          } else {
+            showToast('Invalid file format');
+          }
+        } catch {
+          showToast('Failed to parse file');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+}
+
+if (clearBtn) {
+  clearBtn.onclick = () => {
+    if (confirm('Delete all conversation history? This cannot be undone.')) {
+      chatHistory = [];
+      currentHistoryId = null;
+      saveHistory();
+      renderHistory();
+      showToast('History cleared');
+    }
+  };
+}
+
+// ── Auto-save completed conversations ──
+let lastSavedState = null;
+
+function checkAndSaveConversation() {
+  if (!lastState) return;
+  
+  // Save when conversation ends
+  if (!lastState.active && lastState.messages.length > 0 && lastSavedState !== lastState.runId) {
+    const id = addToHistory(
+      lastState.topic,
+      lastState.messages,
+      lastState.agents
+    );
+    currentHistoryId = id;
+    lastSavedState = lastState.runId;
+    renderHistory();
+  }
+}
+
+// Check periodically
+setInterval(checkAndSaveConversation, 2000);
+
+// ── Initialize ──
+loadHistory();
+loadSettings();
+setupCollapsible('historyHeader', 'historyBody');
+</script>
+</body>
+</html>
