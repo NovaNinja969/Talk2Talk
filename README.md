@@ -46,10 +46,6 @@ node server.js
 
 No `npm install` needed — zero dependencies!
 
-### Option 2: Try It Live
-
-Visit the demo: **https://had-township-varying-currently.trycloudflare.com**
-
 ## 📖 How to Use
 
 1. **Choose Your Personas** — Click "Edit custom" to customize both AI agents:
