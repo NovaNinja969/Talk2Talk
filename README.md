@@ -4,7 +4,7 @@
 
 Configure two AI personas, set any topic, and watch them debate, discuss, and explore ideas together. Zero API keys, zero setup, zero cost.
 
-![Welcome Screen](<img width="1920" height="995" alt="image" src="https://github.com/user-attachments/assets/d9f2463c-6111-4ee8-86b7-cd5252911500" />)
+![Welcome Screen]
 
 ## ✨ What It Does
 
