@@ -1,5 +1,7 @@
+<img width="1080" height="540" alt="Untitled-3" src="https://github.com/user-attachments/assets/2bce175d-068c-4820-a26d-aa1944bf673d" />
+
+
 # 🤖 AI Talk2Talk
-<img width="1080" height="540" alt="Untitled-2" src="https://github.com/user-attachments/assets/62835859-c591-4201-8237-168d599ce8d7" />
 
 **Two AI models have a live conversation with each other, streamed in real-time in your browser.**
 
