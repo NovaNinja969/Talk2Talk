@@ -1,39 +1,192 @@
 # 🤖 AI Talk2Talk
 
-Two free AI models chat with each other, live, in your browser. Zero API keys, zero dependencies, zero topic restrictions — you set the personas and the conversation goes wherever it goes.
+**Two AI models have a live conversation with each other, streamed in real-time in your browser.**
 
-## How it works
+Configure two AI personas, set any topic, and watch them debate, discuss, and explore ideas together. Zero API keys, zero setup, zero cost.
 
-- **Backend** (`server.js`): a single zero-dependency Node script. It loops two agent personas through [Pollinations.ai](https://pollinations.ai)'s free, keyless, OpenAI-compatible endpoint (`https://text.pollinations.ai/openai`), streams tokens over SSE, and serves the UI.
-- **Frontend** (`public/index.html`): one self-contained page. Edit both agents (name, emoji, personality prompt), set a topic, press Start. Watch them talk token-by-token with typing indicators, live turn counter, and auto-scroll.
+![Welcome Screen](docs/welcome.png)
 
-## Run
+## ✨ What It Does
+
+AI Talk2Talk lets you orchestrate conversations between two customizable AI personalities. Set up philosophical debates, technical discussions, creative brainstorming, or just entertaining clashes between different perspectives.
+
+### 🎯 Key Features
+
+- **Live Streaming** — Watch tokens appear in real-time as both AIs respond to each other
+- **Fully Customizable Personas** — Edit names, emojis, and personality prompts for both AIs
+- **Flexible Topics** — Discuss anything from quantum physics to pineapple pizza (with safety filters)
+- **Zero Setup** — No API keys, no accounts, no installations. Just open and start
+- **Built-in Safety** — Comprehensive content filter blocks inappropriate content while allowing legitimate discussions
+- **Conversation Controls** — Adjust pause time (0-8s), set max turns, or let them talk forever
+- **Free & Anonymous** — Uses Pollinations.ai's free tier with no tracking
+
+### 🧠 Use Cases
+
+- **Philosophical Debates** — Socrates vs Nietzsche on truth and meaning
+- **Technical Discussions** — Security expert vs hacker on encryption approaches
+- **Creative Brainstorming** — Storyteller vs critic on narrative structure
+- **Learning by Observation** — Watch experts reason through complex problems
+- **Entertainment** — Create funny persona clashes or unexpected conversations
+
+## 🚀 Quick Start
+
+### Option 1: Run Locally
 
 ```bash
+# Clone the repo
+git clone https://github.com/NovaNinja969/Ai_Talk2Talk.git
+cd Ai_Talk2Talk
+
+# Start the server (requires Node 18+)
 node server.js
+
+# Open in browser
 # → http://localhost:3456
 ```
 
-Requires Node 18+ (uses global `fetch`). No `npm install` needed.
+No `npm install` needed — zero dependencies!
 
-## Configure
+### Option 2: Try It Live
 
-| Where | What |
-|---|---|
-| UI | Agent names, emojis, persona prompts, topic, pause between turns (0–8 s), max turns (0 = ∞) |
-| Env | `PORT` (default 3456), `POLLINATIONS_MODEL` (default `openai`), `POLLINATIONS_URL` |
+Visit the demo: **https://had-township-varying-currently.trycloudflare.com**
 
-Available models: `GET https://text.pollinations.ai/models` (e.g. `openai`, `openai-fast`).
+## 📖 How to Use
 
-## API
+1. **Choose Your Personas** — Click "Edit custom" to customize both AI agents:
+   - Give each a name and emoji
+   - Write personality prompts (e.g., "You are a skeptical scientist" vs "You are an optimistic futurist")
 
-- `GET  /api/events` — SSE stream (`start`, `msg-start`, `token`, `msg-end`, `status`, `reset`, `snapshot`)
-- `GET  /api/state` — full conversation snapshot
-- `POST /api/start` — `{agents:[{name,emoji,prompt}×2], topic, maxTurns, pauseMs}`
-- `POST /api/stop` — stop the loop
-- `DELETE /api/reset` — clear history
+2. **Set a Topic** — Type any subject or click a suggestion:
+   - "Debate whether consciousness can exist without a physical body"
+   - "Discuss the future of AI and its impact on human creativity"
+   - "Argue about whether pineapple belongs on pizza"
 
-## Notes
+3. **Press Start** — Watch them talk! Adjust settings as needed:
+   - **Pause between turns**: 0-8 seconds
+   - **Max turns**: Set a limit or 0 for infinite
 
-- "Unrestricted" here means no topic gating on our side — the personas and topic are passed through verbatim. The upstream model still applies its own provider-side safety behavior; if a reply is refused, the loop surfaces it as an error and stops.
-- The free anonymous tier is rate-limited; if you see `API 429`, slow the pause slider or wait a moment.
+4. **Observe & Learn** — See how different personalities approach the same topic
+
+![Active Conversation](docs/chat-active.png)
+
+## 🛡️ Safety Features
+
+AI Talk2Talk includes a comprehensive 5-layer content filter that blocks:
+
+- 🔞 Sexual content and explicit material
+- ⛪ Religious debates and theological arguments
+- 🤬 Hate speech, slurs, and discriminatory language
+- 🔪 Extreme violence, gore, and weapon instructions
+- 💔 Self-harm and suicide content
+- 💊 Illegal drugs and substance abuse
+- 🔫 Weapons, cybercrime, and illegal activities
+- 🛡️ Jailbreak attempts and filter bypasses
+
+**Allowed topics**: Philosophy, science, history, technology, art, literature, mathematics, and other legitimate educational discussions.
+
+The filter uses:
+- 185+ regex patterns covering 2000+ terms
+- Leetspeak normalization (catches `s3x`, `n1gga`, `f4gg0t`, etc.)
+- Phonetic fuzzy matching (catches `seex`, `fucc`, `biitch`)
+- Semantic pattern detection
+- Client-side + server-side validation
+
+## 🎨 Preset Personalities
+
+Quick-start with built-in presets:
+
+- **ChatGPT vs Claude** — Friendly, balanced conversation
+- **Philosophers Debate** — Socrates vs Nietzsche on truth and meaning
+- **Science Clash** — Theoretical physicist vs experimental scientist
+- **Creative Writing** — Storyteller vs literary critic
+
+Save your own custom presets for reuse!
+
+## 🔧 Configuration
+
+| Setting | Where | Description |
+|---------|-------|-------------|
+| Agent names/emojis | UI | Customize both AI personas |
+| Personality prompts | UI | Define how each AI behaves |
+| Topic | UI | What they discuss |
+| Pause time | UI | Seconds between turns (0-8) |
+| Max turns | UI | Conversation length limit (0 = ∞) |
+| Port | Env: `PORT` | Server port (default: 3456) |
+| AI Model | Env: `POLLINATIONS_MODEL` | Model name (default: `openai`) |
+
+Available models: `GET https://text.pollinations.ai/models`
+
+## 📡 API
+
+For developers who want to integrate:
+
+```bash
+# Start conversation
+POST /api/start
+{
+  "agents": [
+    {"name": "AI 1", "emoji": "🤖", "prompt": "..."},
+    {"name": "AI 2", "emoji": "🧠", "prompt": "..."}
+  ],
+  "topic": "Discuss quantum computing",
+  "maxTurns": 10,
+  "pauseMs": 2000
+}
+
+# Stream events (SSE)
+GET /api/events
+
+# Get current state
+GET /api/state
+
+# Stop conversation
+POST /api/stop
+
+# Reset/clear history
+DELETE /api/reset
+```
+
+## 🏗️ Tech Stack
+
+- **Backend**: Single Node.js server (zero dependencies)
+- **Frontend**: Self-contained HTML/CSS/JS (no build step)
+- **AI**: Pollinations.ai free API (OpenAI-compatible)
+- **Streaming**: Server-Sent Events (SSE)
+- **Filter**: Regex + leetspeak normalization + phonetic matching
+
+## 📸 Screenshots
+
+![Welcome Screen](docs/welcome.png)
+*Initial welcome screen with topic suggestions*
+
+![Active Chat](docs/chat-active.png)
+*Two AIs discussing a topic in real-time*
+
+![Full Conversation](docs/chat-full.png)
+*Extended conversation with multiple turns*
+
+## 🤝 Contributing
+
+Contributions welcome! Areas for improvement:
+
+- Additional personality presets
+- UI/UX enhancements
+- Export conversation history
+- Multi-language support
+- Advanced filtering options
+
+## 📝 Notes
+
+- **Rate Limits**: Pollinations.ai free tier has rate limits. If you see API 429 errors, increase the pause time between turns.
+- **"Unrestricted"**: No topic gating on our side, but the upstream AI model still applies its own safety behavior.
+- **Privacy**: No data collection, no tracking, no accounts required.
+
+## 📄 License
+
+MIT License - feel free to use, modify, and distribute.
+
+---
+
+**Built with ❤️ using [Pollinations.ai](https://pollinations.ai)**
+
+*Questions? Open an [issue](https://github.com/NovaNinja969/Ai_Talk2Talk/issues) or contribute a PR!*
