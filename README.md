@@ -65,9 +65,7 @@ Visit the demo: **https://had-township-varying-currently.trycloudflare.com**
    - **Pause between turns**: 0-8 seconds
    - **Max turns**: Set a limit or 0 for infinite
 
-4. **Observe & Learn** — See how different personalities approach the same topic
-
-![Active Conversation](docs/chat-active.png)
+4. **Observe & Learn** — watch how different personalities approach the same topic
 
 ## 🛡️ Safety Features
 
