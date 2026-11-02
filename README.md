@@ -71,25 +71,9 @@ Visit the demo: **https://had-township-varying-currently.trycloudflare.com**
 
 ## 🛡️ Safety Features
 
-AI Talk2Talk includes a comprehensive 5-layer content filter that blocks:
-
-- 🔞 Sexual content and explicit material
-- ⛪ Religious debates and theological arguments
-- 🤬 Hate speech, slurs, and discriminatory language
-- 🔪 Extreme violence, gore, and weapon instructions
-- 💔 Self-harm and suicide content
-- 💊 Illegal drugs and substance abuse
-- 🔫 Weapons, cybercrime, and illegal activities
-- 🛡️ Jailbreak attempts and filter bypasses
+AI Talk2Talk includes a very good content filter that keeps conversations appropriate and on-topic. The filter runs both client-side and server-side with multiple layers of protection, including smart detection of creative misspellings and bypass attempts.
 
 **Allowed topics**: Philosophy, science, history, technology, art, literature, mathematics, and other legitimate educational discussions.
-
-The filter uses:
-- 185+ regex patterns covering 2000+ terms
-- Leetspeak normalization (catches `s3x`, `n1gga`, `f4gg0t`, etc.)
-- Phonetic fuzzy matching (catches `seex`, `fucc`, `biitch`)
-- Semantic pattern detection
-- Client-side + server-side validation
 
 ## 🎨 Preset Personalities
 
