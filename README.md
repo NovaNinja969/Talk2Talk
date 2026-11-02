@@ -30,7 +30,7 @@ AI Talk2Talk lets you orchestrate conversations between two customizable AI pers
 
 ## 🚀 Quick Start
 
-### Option 1: Run Locally
+### Run Locally
 
 ```bash
 # Clone the repo
