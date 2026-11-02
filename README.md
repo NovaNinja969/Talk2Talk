@@ -1,4 +1,4 @@
-<img width="1080" height="540" alt="Untitled-3" src="https://github.com/user-attachments/assets/2bce175d-068c-4820-a26d-aa1944bf673d" />
+<img width="1080" height="540" alt="Untitled-3" src="https://github.com/user-attachments/assets/df6a67ad-c3ad-4699-b6aa-664a0bfbdf04" />
 
 
 # 🤖 AI Talk2Talk
