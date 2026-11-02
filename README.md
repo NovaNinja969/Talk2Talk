@@ -135,7 +135,7 @@ DELETE /api/reset
 - **Streaming**: Server-Sent Events (SSE)
 - **Filter**: Regex + leetspeak normalization + phonetic matching
 
-## 📸 Screenshots
+## Screenshots
 
 ![Welcome Screen](docs/welcome.png)
 *Initial welcome screen with topic suggestions*
