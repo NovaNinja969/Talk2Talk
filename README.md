@@ -146,9 +146,6 @@ DELETE /api/reset
 ![Active Chat](docs/chat-active.png)
 *Two AIs discussing a topic in real-time*
 
-![Full Conversation](docs/chat-full.png)
-*Extended conversation with multiple turns*
-
 ## 🤝 Contributing
 
 Contributions welcome! Areas for improvement:
