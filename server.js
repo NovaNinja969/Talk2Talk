@@ -808,6 +808,36 @@ const server = http.createServer(async (req, res) => {
         }
       }
       
+      if (req.method === 'GET' && p === '/api/export/md') {
+        const historyId = url.searchParams.get('historyId');
+        let topic = state.topic || 'Untitled';
+        let msgs = state.messages;
+        let ag = state.agents;
+        
+        // If no messages in current state, return error
+        if (!msgs || msgs.length === 0) {
+          return json(res, 400, { error: 'No messages to export' });
+        }
+        
+        let md = `# ${topic}\n\n`;
+        for (const m of msgs) {
+          if (m.agent === 2) {
+            md += `## ⚖️ Moderator\n${m.content}\n\n`;
+          } else {
+            const name = ag[m.agent]?.name || ('Agent ' + (m.agent + 1));
+            md += `## ${name}\n${m.content}\n\n`;
+          }
+        }
+        
+        const buf = Buffer.from(md, 'utf-8');
+        res.writeHead(200, {
+          'Content-Type': 'text/markdown; charset=utf-8',
+          'Content-Disposition': 'attachment; filename="conversation.md"',
+          'Content-Length': buf.length,
+        });
+        return res.end(buf);
+      }
+      
       return json(res, 404, { error: 'not found' });
     }
     if (req.method === 'GET' || req.method === 'HEAD') return serveStatic(req, res, p);

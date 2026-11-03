@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
     --sidebar-bg: #171717;
@@ -1453,6 +1454,154 @@
     .profile-card { padding: 10px 12px; }
     .profile-card-emoji { width: 36px; height: 36px; font-size: 22px; }
   }
+
+  /* ── Phase 3: Retention Features ── */
+
+  /* Export buttons */
+  .export-buttons {
+    display: flex;
+    gap: 4px;
+  }
+  .export-btn {
+    padding: 5px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .export-btn:hover { background: var(--surface-hover); border-color: var(--border-strong); color: var(--text-primary); }
+  .export-btn svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  /* Share button */
+  .share-btn {
+    padding: 5px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .share-btn:hover { background: var(--surface-hover); border-color: var(--border-strong); color: var(--text-primary); }
+  .share-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  /* Topic library */
+  .topic-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+  .topic-item {
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .topic-item:hover { background: var(--surface-hover); border-color: var(--border-strong); transform: translateX(2px); }
+  .topic-item-text {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.4;
+    flex: 1;
+  }
+  .topic-delete {
+    width: 24px; height: 24px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .topic-item:hover .topic-delete { opacity: 1; }
+  .topic-delete:hover { background: var(--surface-hover); color: var(--danger); }
+  .topic-delete svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  /* Rating modal */
+  .rating-btn {
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+  }
+  .rating-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .rating-btn.agent1:hover { border-color: var(--a1); background: rgba(16,163,127,0.08); }
+  .rating-btn.agent2:hover { border-color: var(--a2); background: rgba(217,119,87,0.08); }
+  .rating-btn.tie:hover { border-color: #A855F7; background: rgba(168,85,247,0.08); }
+  .rating-btn-emoji { font-size: 28px; }
+  .rating-btn-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+  /* History item rating badge */
+  .history-item-rating {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    margin-top: 4px;
+  }
+  .history-item-rating.agent1 { background: rgba(16,163,127,0.15); color: var(--a1); }
+  .history-item-rating.agent2 { background: rgba(217,119,87,0.15); color: var(--a2); }
+  .history-item-rating.tie { background: rgba(168,85,247,0.15); color: #A855F7; }
+
+  /* History item replay button */
+  .history-item-replay {
+    width: 24px; height: 24px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .history-item:hover .history-item-replay { opacity: 1; }
+  .history-item-replay:hover { background: var(--surface); color: var(--accent); }
+  .history-item-replay svg { width: 14px; height: 14px; stroke: currentColor; fill: currentColor; stroke-width: 0; }
+
+  @media (max-width: 768px) {
+    .export-buttons { display: none; }
+    .share-btn span { display: none; }
+    .share-btn { padding: 5px 8px; }
+  }
 </style>
 </head>
 <body>
@@ -1487,6 +1636,11 @@
       </div>
     </div>
   </div>
+
+  <button class="new-chat" id="topicLibraryBtn" style="margin-top: 4px;">
+    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    Topic Library
+  </button>
 
   <div class="sidebar-bottom">
     <button class="settings-btn" id="settingsBtn" title="Settings">
@@ -1559,6 +1713,20 @@
       </div>
     </div>
     <div class="control-bar-right">
+      <div class="export-buttons">
+        <button class="export-btn" id="exportMdBtn" title="Export as Markdown">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          MD
+        </button>
+        <button class="export-btn" id="exportPdfBtn" title="Export as PDF">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          PDF
+        </button>
+      </div>
+      <button class="share-btn" id="shareBtn" title="Copy shareable link">
+        <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Share
+      </button>
       <button class="restart-btn" id="restartBtn" title="Restart with same config">
         <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         Restart
@@ -1614,6 +1782,55 @@
 </main>
 
 <div class="toast" id="toast"></div>
+
+<!-- Topic Library Modal -->
+<div class="modal-overlay topic-library-modal" id="topicLibraryModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>📚 Topic Library</h2>
+      <button class="modal-close" id="closeTopicLibrary">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom: 16px;">
+        <button class="btn-secondary" id="saveCurrentTopicBtn" style="width: 100%;">
+          <svg viewBox="0 0 24 24" width="14" height="14" style="stroke: currentColor; fill: none; stroke-width: 2; vertical-align: middle; margin-right: 6px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Current Topic
+        </button>
+      </div>
+      <h3 style="font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Curated Topics</h3>
+      <div class="topic-grid" id="curatedTopicsList"></div>
+      <h3 style="font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin: 20px 0 12px;">My Saved Topics</h3>
+      <div class="topic-grid" id="savedTopicsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Rating Modal -->
+<div class="modal-overlay rating-modal" id="ratingModal">
+  <div class="modal" style="max-width: 420px;">
+    <div class="modal-header">
+      <h2>🏆 Rate This Conversation</h2>
+      <button class="modal-close" id="closeRatingModal">&times;</button>
+    </div>
+    <div class="modal-body" style="text-align: center;">
+      <p style="color: var(--text-secondary); margin-bottom: 20px;">Who made the better arguments?</p>
+      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <button class="rating-btn agent1" id="rateAgent1Btn">
+          <span class="rating-btn-emoji" id="rateAgent1Emoji">👤</span>
+          <span class="rating-btn-label" id="rateAgent1Label">Agent 1</span>
+        </button>
+        <button class="rating-btn tie" id="rateTieBtn">
+          <span class="rating-btn-emoji">🤝</span>
+          <span class="rating-btn-label">Tie</span>
+        </button>
+        <button class="rating-btn agent2" id="rateAgent2Btn">
+          <span class="rating-btn-emoji" id="rateAgent2Emoji">👤</span>
+          <span class="rating-btn-label" id="rateAgent2Label">Agent 2</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Settings Modal -->
 <div class="modal-overlay" id="settingsModal">
@@ -2171,6 +2388,16 @@ function updateFromState(state) {
     } else {
       setStatus(`Ended · ${state.turn} turns`);
       setTimeout(() => setStatus(''), 4000);
+      // Show rating modal when conversation ends (if not already rated)
+      if (lastState && lastState.active && !state.active && state.messages.length > 0) {
+        // Conversation just ended - check if current history entry needs rating
+        if (currentHistoryId) {
+          const entry = chatHistory.find(h => h.id === currentHistoryId);
+          if (entry && !entry.rating) {
+            setTimeout(() => showRatingModal(), 1000);
+          }
+        }
+      }
     }
   }
   lastState = state;
@@ -3088,7 +3315,8 @@ function addToHistory(topic, messages, agents) {
     messages,
     agents,
     timestamp: Date.now(),
-    turnCount: messages.length
+    turnCount: messages.length,
+    rating: null
   };
   chatHistory.unshift(entry);
   if (chatHistory.length > 50) chatHistory = chatHistory.slice(0, 50);
@@ -3110,6 +3338,10 @@ function renderHistory() {
     const date = new Date(item.timestamp);
     const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     const isActive = item.id === currentHistoryId;
+    let ratingBadge = '';
+    if (item.rating === 'agent1') ratingBadge = '<span class="history-item-rating agent1">🏆 ' + (item.agents?.[0]?.name || 'Agent 1') + '</span>';
+    else if (item.rating === 'agent2') ratingBadge = '<span class="history-item-rating agent2">🏆 ' + (item.agents?.[1]?.name || 'Agent 2') + '</span>';
+    else if (item.rating === 'tie') ratingBadge = '<span class="history-item-rating tie">🤝 Tie</span>';
     return `
       <div class="history-item${isActive ? ' active' : ''}" data-id="${item.id}">
         <div class="history-item-icon">
@@ -3118,7 +3350,11 @@ function renderHistory() {
         <div class="history-item-content">
           <div class="history-item-title">${item.topic}</div>
           <div class="history-item-meta">${item.turnCount} turns · ${timeStr}</div>
+          ${ratingBadge}
         </div>
+        <button class="history-item-replay" data-id="${item.id}" title="Replay conversation">
+          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
         <button class="history-item-delete" data-id="${item.id}" title="Delete">
           <svg viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
         </button>
@@ -3129,8 +3365,15 @@ function renderHistory() {
   // Attach click handlers
   list.querySelectorAll('.history-item').forEach(el => {
     el.onclick = (e) => {
-      if (e.target.closest('.history-item-delete')) return;
+      if (e.target.closest('.history-item-delete') || e.target.closest('.history-item-replay')) return;
       loadConversation(el.dataset.id);
+    };
+  });
+  
+  list.querySelectorAll('.history-item-replay').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      replayConversation(btn.dataset.id);
     };
   });
   
@@ -3481,10 +3724,435 @@ function updateTopbarSpeaking(text) {
 const restartBtn = document.getElementById('restartBtn');
 if (restartBtn) restartBtn.onclick = handleRestart;
 
+// ════════════════════════════════════════════════════════════════════════════
+// ── Phase 3: Retention Features ──
+// ════════════════════════════════════════════════════════════════════════════
+
+// ── Export to Markdown ──
+async function exportMarkdown() {
+  if (!lastState || lastState.messages.length === 0) {
+    showToast('No conversation to export');
+    return;
+  }
+  try {
+    const res = await fetch('/api/export/md');
+    if (!res.ok) {
+      showToast('Export failed');
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const topicSlug = (lastState.topic || 'conversation').slice(0, 40).replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+    a.download = `${topicSlug}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Markdown downloaded');
+  } catch {
+    showToast('Export failed');
+  }
+}
+
+// ── Export to PDF ──
+function exportPDF() {
+  if (!lastState || lastState.messages.length === 0) {
+    showToast('No conversation to export');
+    return;
+  }
+  if (typeof window.jspdf === 'undefined') {
+    showToast('PDF library not loaded');
+    return;
+  }
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const ag = lastState.agents || agents;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const maxWidth = pageWidth - margin * 2;
+    let y = 30;
+
+    // Title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('AI Talk2Talk Conversation', margin, y);
+    y += 12;
+
+    // Topic
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100);
+    const topicLines = doc.splitTextToSize('Topic: ' + (lastState.topic || 'Untitled'), maxWidth);
+    doc.text(topicLines, margin, y);
+    y += topicLines.length * 6 + 8;
+
+    // Date
+    doc.setFontSize(10);
+    doc.text('Date: ' + new Date().toLocaleString(), margin, y);
+    y += 10;
+
+    // Separator
+    doc.setDrawColor(200);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    // Messages
+    for (const msg of lastState.messages) {
+      if (y > 260) {
+        doc.addPage();
+        y = 20;
+      }
+
+      let name;
+      if (msg.agent === 2) {
+        name = '⚖️ Moderator';
+      } else {
+        name = (ag[msg.agent]?.name || 'Agent ' + (msg.agent + 1));
+      }
+
+      // Agent name
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(msg.agent === 2 ? 128 : (msg.agent === 0 ? 16 : 180), msg.agent === 2 ? 85 : (msg.agent === 0 ? 163 : 119), msg.agent === 2 ? 247 : (msg.agent === 0 ? 127 : 87));
+      doc.text(name, margin, y);
+      y += 7;
+
+      // Message content (strip markdown roughly)
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(40);
+      const cleanContent = (msg.content || '').replace(/\*\*/g, '').replace(/\*/g, '').replace(/#{1,6}\s/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+      const lines = doc.splitTextToSize(cleanContent, maxWidth);
+      
+      for (const line of lines) {
+        if (y > 275) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(line, margin, y);
+        y += 5.5;
+      }
+      y += 6;
+    }
+
+    const topicSlug = (lastState.topic || 'conversation').slice(0, 40).replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+    doc.save(`${topicSlug}.pdf`);
+    showToast('PDF downloaded');
+  } catch (e) {
+    console.error('PDF export error:', e);
+    showToast('PDF export failed');
+  }
+}
+
+// ── Topic Library ──
+const TOPICS_KEY = 'ai_talk2talk_topics';
+
+const CURATED_TOPICS = [
+  "Is consciousness an illusion?",
+  "Debate: AI will surpass human intelligence by 2050",
+  "Compare Stoicism and Existentialism",
+  "Does free will exist?",
+  "The ethics of genetic engineering",
+  "Is democracy the best form of government?",
+  "Artificial creativity: can AI be truly creative?",
+  "The simulation hypothesis",
+  "Climate change: technology vs policy solutions",
+  "The future of work in an automated world",
+  "Is mathematics discovered or invented?",
+  "The nature of time: linear or cyclical?",
+  "Privacy vs security in the digital age",
+  "The meaning of life in a secular universe",
+  "Space colonization: necessity or fantasy?"
+];
+
+let savedTopics = [];
+
+function loadTopicLibrary() {
+  try {
+    const stored = localStorage.getItem(TOPICS_KEY);
+    savedTopics = stored ? JSON.parse(stored) : [];
+  } catch { savedTopics = []; }
+  renderTopicLibrary();
+}
+
+function saveTopics() {
+  try { localStorage.setItem(TOPICS_KEY, JSON.stringify(savedTopics)); } catch {}
+}
+
+function renderTopicLibrary() {
+  const curatedList = document.getElementById('curatedTopicsList');
+  const savedList = document.getElementById('savedTopicsList');
+  if (!curatedList || !savedList) return;
+
+  curatedList.innerHTML = CURATED_TOPICS.map((t, i) => `
+    <div class="topic-item" data-topic="${t.replace(/"/g, '&quot;')}">
+      <div class="topic-item-text">${t}</div>
+    </div>
+  `).join('');
+
+  if (savedTopics.length === 0) {
+    savedList.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; padding: 8px;">No saved topics yet. Enter a topic and click "Save Current Topic".</div>';
+  } else {
+    savedList.innerHTML = savedTopics.map((t, i) => `
+      <div class="topic-item" data-topic="${t.replace(/"/g, '&quot;')}">
+        <div class="topic-item-text">${t}</div>
+        <button class="topic-delete" data-index="${i}" title="Delete">
+          <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    `).join('');
+  }
+
+  // Click handlers for all topic items
+  document.querySelectorAll('.topic-item').forEach(el => {
+    el.onclick = (e) => {
+      if (e.target.closest('.topic-delete')) return;
+      const topic = el.dataset.topic;
+      if (topic) {
+        applyTopic(topic);
+        document.getElementById('topicLibraryModal').classList.remove('show');
+        showToast('Topic applied');
+      }
+    };
+  });
+
+  // Delete handlers for saved topics
+  savedList.querySelectorAll('.topic-delete').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index);
+      savedTopics.splice(idx, 1);
+      saveTopics();
+      renderTopicLibrary();
+      showToast('Topic removed');
+    };
+  });
+}
+
+function applyTopic(topic) {
+  topicInput.value = topic;
+  topicInput.style.height = 'auto';
+  topicInput.style.height = Math.min(topicInput.scrollHeight, 200) + 'px';
+  topicInput.focus();
+}
+
+function saveCurrentTopic() {
+  const topic = topicInput.value.trim();
+  if (!topic) {
+    showToast('Enter a topic first');
+    return;
+  }
+  if (savedTopics.includes(topic)) {
+    showToast('Topic already saved');
+    return;
+  }
+  savedTopics.push(topic);
+  saveTopics();
+  renderTopicLibrary();
+  showToast('Topic saved');
+}
+
+// Topic Library modal
+const topicLibraryModal = document.getElementById('topicLibraryModal');
+const topicLibraryBtn = document.getElementById('topicLibraryBtn');
+const closeTopicLibrary = document.getElementById('closeTopicLibrary');
+const saveCurrentTopicBtn = document.getElementById('saveCurrentTopicBtn');
+
+if (topicLibraryBtn) topicLibraryBtn.onclick = () => {
+  loadTopicLibrary();
+  topicLibraryModal.classList.add('show');
+};
+if (closeTopicLibrary) closeTopicLibrary.onclick = () => topicLibraryModal.classList.remove('show');
+if (topicLibraryModal) topicLibraryModal.onclick = (e) => {
+  if (e.target === topicLibraryModal) topicLibraryModal.classList.remove('show');
+};
+if (saveCurrentTopicBtn) saveCurrentTopicBtn.onclick = saveCurrentTopic;
+
+// ── Conversation Replay ──
+let replayTimeout = null;
+let isReplaying = false;
+
+function replayConversation(id) {
+  const item = chatHistory.find(h => h.id === id);
+  if (!item) return;
+  if (isReplaying) {
+    stopReplay();
+    return;
+  }
+
+  isReplaying = true;
+  clearChat();
+  
+  // Restore agents
+  if (item.agents && item.agents.length === 2) {
+    agents = item.agents;
+  }
+
+  setStatus('▶ Replaying...', 'active');
+
+  let msgIndex = 0;
+  function playNext() {
+    if (msgIndex >= item.messages.length || !isReplaying) {
+      isReplaying = false;
+      setStatus(`Replay complete · ${item.messages.length} messages`);
+      setTimeout(() => setStatus(''), 3000);
+      return;
+    }
+    const msg = item.messages[msgIndex];
+    renderMessage(msg.agent, msg.content, false);
+    msgIndex++;
+    replayTimeout = setTimeout(playNext, 500);
+  }
+  playNext();
+}
+
+function stopReplay() {
+  isReplaying = false;
+  if (replayTimeout) {
+    clearTimeout(replayTimeout);
+    replayTimeout = null;
+  }
+  setStatus('Replay stopped');
+  setTimeout(() => setStatus(''), 2000);
+}
+
+// ── Conversation Ratings ──
+const ratingModal = document.getElementById('ratingModal');
+const closeRatingModalBtn = document.getElementById('closeRatingModal');
+const rateAgent1Btn = document.getElementById('rateAgent1Btn');
+const rateAgent2Btn = document.getElementById('rateAgent2Btn');
+const rateTieBtn = document.getElementById('rateTieBtn');
+
+function showRatingModal() {
+  if (!ratingModal) return;
+  const ag = lastState?.agents || agents;
+  const a1Emoji = document.getElementById('rateAgent1Emoji');
+  const a2Emoji = document.getElementById('rateAgent2Emoji');
+  const a1Label = document.getElementById('rateAgent1Label');
+  const a2Label = document.getElementById('rateAgent2Label');
+  if (a1Emoji && ag[0]) a1Emoji.textContent = ag[0].emoji || '👤';
+  if (a2Emoji && ag[1]) a2Emoji.textContent = ag[1].emoji || '👤';
+  if (a1Label && ag[0]) a1Label.textContent = ag[0].name || 'Agent 1';
+  if (a2Label && ag[1]) a2Label.textContent = ag[1].name || 'Agent 2';
+  ratingModal.classList.add('show');
+}
+
+function hideRatingModal() {
+  if (ratingModal) ratingModal.classList.remove('show');
+}
+
+function rateConversation(rating) {
+  if (!currentHistoryId) {
+    // Try to find the most recent entry
+    if (chatHistory.length > 0) {
+      currentHistoryId = chatHistory[0].id;
+    } else {
+      hideRatingModal();
+      return;
+    }
+  }
+  const entry = chatHistory.find(h => h.id === currentHistoryId);
+  if (entry) {
+    entry.rating = rating;
+    saveHistory();
+    renderHistory();
+    const label = rating === 'agent1' ? (entry.agents?.[0]?.name || 'Agent 1') : 
+                  rating === 'agent2' ? (entry.agents?.[1]?.name || 'Agent 2') : 'Tie';
+    showToast(`Rated: ${label} wins!`);
+  }
+  hideRatingModal();
+}
+
+if (closeRatingModalBtn) closeRatingModalBtn.onclick = hideRatingModal;
+if (ratingModal) ratingModal.onclick = (e) => {
+  if (e.target === ratingModal) hideRatingModal();
+};
+if (rateAgent1Btn) rateAgent1Btn.onclick = () => rateConversation('agent1');
+if (rateAgent2Btn) rateAgent2Btn.onclick = () => rateConversation('agent2');
+if (rateTieBtn) rateTieBtn.onclick = () => rateConversation('tie');
+
+// ── Export Buttons ──
+const exportMdBtn = document.getElementById('exportMdBtn');
+const exportPdfBtn = document.getElementById('exportPdfBtn');
+if (exportMdBtn) exportMdBtn.onclick = exportMarkdown;
+if (exportPdfBtn) exportPdfBtn.onclick = exportPDF;
+
+// ── Shareable Links ──
+function shareConversation() {
+  if (!lastState || lastState.messages.length === 0) {
+    showToast('No conversation to share');
+    return;
+  }
+  try {
+    const shareData = {
+      topic: lastState.topic,
+      agents: lastState.agents,
+      messages: lastState.messages
+    };
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData))));
+    const url = window.location.origin + window.location.pathname + '#share=' + encoded;
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Link copied to clipboard!');
+    }).catch(() => {
+      // Fallback
+      const input = document.createElement('input');
+      input.value = url;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      showToast('Link copied to clipboard!');
+    });
+  } catch {
+    showToast('Failed to create share link');
+  }
+}
+
+function loadFromShareLink() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#share=')) return;
+  try {
+    const encoded = hash.slice(7);
+    const json = decodeURIComponent(escape(atob(encoded)));
+    const data = JSON.parse(json);
+    if (data.topic && data.agents && data.messages) {
+      // Restore agents
+      agents = data.agents;
+      if (data.agents.length >= 2) {
+        document.getElementById('a0-name').value = data.agents[0].name || '';
+        document.getElementById('a0-emoji').value = data.agents[0].emoji || '';
+        document.getElementById('a1-name').value = data.agents[1].name || '';
+        document.getElementById('a1-emoji').value = data.agents[1].emoji || '';
+      }
+      // Set topic
+      topicInput.value = data.topic;
+      // Render messages
+      clearChat();
+      for (const msg of data.messages) {
+        renderMessage(msg.agent, msg.content, false);
+      }
+      renderProfileCards({ agents: data.agents, moderator: { enabled: false } });
+      showToast('Shared conversation loaded');
+      // Clear hash
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  } catch (e) {
+    console.error('Failed to load share link:', e);
+  }
+}
+
+const shareBtn = document.getElementById('shareBtn');
+if (shareBtn) shareBtn.onclick = shareConversation;
+
 // ── Initialize ──
 loadHistory();
 loadSettings();
+loadTopicLibrary();
 setupCollapsible('historyHeader', 'historyBody');
+
+// Check for share link on page load
+loadFromShareLink();
 </script>
 </body>
 </html>
