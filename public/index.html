@@ -1027,6 +1027,94 @@
   .preset-footer-btn.primary:hover { background: var(--accent-hover); }
   .preset-footer-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
 
+  /* Moderator messages */
+  .msg-moderator {
+    background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(234,179,8,0.06));
+    border: 1px solid rgba(168,85,247,0.18);
+    border-radius: var(--radius-md);
+    padding: 16px 20px !important;
+    margin: 12px 0;
+  }
+  .msg-moderator + .msg { border-top: none; }
+  .msg + .msg-moderator { border-top: none; }
+  .msg-moderator .msg-avatar {
+    background: linear-gradient(135deg, #A855F7, #EAB308) !important;
+    box-shadow: 0 0 12px rgba(168,85,247,0.3);
+  }
+  .msg-moderator .msg-name {
+    background: linear-gradient(135deg, #A855F7, #EAB308);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+  }
+  .msg-moderator .msg-text {
+    color: var(--text-primary);
+    font-style: italic;
+    line-height: 1.8;
+  }
+
+  /* Custom endpoint fields */
+  .custom-fields {
+    display: none;
+    margin-top: 8px;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .custom-fields.show { display: block; }
+  .custom-fields .field { margin-bottom: 6px; }
+  .custom-fields .field:last-child { margin-bottom: 0; }
+
+  /* Stop & Summarize button */
+  .summarize-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #A855F7, #7C3AED);
+    color: white;
+    border: none;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .summarize-btn.show { display: flex; }
+  .summarize-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(168,85,247,0.3); }
+  .summarize-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  /* Moderator/debate section in settings */
+  .feature-section {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(168,85,247,0.04);
+    border: 1px solid rgba(168,85,247,0.12);
+    border-radius: var(--radius-sm);
+  }
+  .feature-section.debate {
+    background: rgba(239,68,68,0.04);
+    border-color: rgba(239,68,68,0.15);
+  }
+  .feature-section h4 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .feature-section .field { margin-bottom: 8px; }
+  .feature-section .field:last-child { margin-bottom: 0; }
+  .moderator-fields { display: none; margin-top: 8px; }
+  .moderator-fields.show { display: block; }
+
   /* Scrollbar */
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -1163,6 +1251,10 @@
     <div class="input-col">
       <div class="composer">
         <textarea id="topicInput" rows="1" placeholder="Enter a topic for the AIs to discuss…"></textarea>
+        <button class="summarize-btn" id="summarizeBtn" title="Stop and generate a summary">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Summarize
+        </button>
         <button class="send-btn" id="sendBtn" title="Start">
           <svg id="sendIcon" viewBox="0 0 24 24"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <svg id="stopIcon" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
@@ -1200,13 +1292,12 @@
               <div class="field emoji-field"><label>Icon</label><input id="a0-emoji" value="G" maxlength="2"></div>
             </div>
             <div class="field"><label>Model</label>
-              <select id="a0-model">
-                <option value="openai">GPT (Default)</option>
-                <option value="openai-fast">GPT Fast</option>
-                <option value="mistral">Mistral</option>
-                <option value="llama">Llama</option>
-                <option value="claude-hybridspace">Claude</option>
-              </select>
+              <select id="a0-model"></select>
+            </div>
+            <div class="custom-fields" id="a0-custom">
+              <div class="field"><label>Endpoint URL</label><input id="a0-endpoint" type="text" placeholder="https://api.example.com/v1/chat/completions"></div>
+              <div class="field"><label>API Key</label><input id="a0-apikey" type="password" placeholder="sk-..."></div>
+              <div class="field"><label>Model Name</label><input id="a0-custom-model" type="text" placeholder="gpt-4o"></div>
             </div>
             <div class="field"><label>Personality</label>
               <textarea id="a0-prompt">You are ChatGPT: helpful, friendly, and informative. Keep responses concise and conversational (1-4 sentences). Never use lists or asterisks.</textarea>
@@ -1219,16 +1310,42 @@
               <div class="field emoji-field"><label>Icon</label><input id="a1-emoji" value="C" maxlength="2"></div>
             </div>
             <div class="field"><label>Model</label>
-              <select id="a1-model">
-                <option value="openai">GPT (Default)</option>
-                <option value="openai-fast">GPT Fast</option>
-                <option value="mistral">Mistral</option>
-                <option value="llama">Llama</option>
-                <option value="claude-hybridspace" selected>Claude</option>
-              </select>
+              <select id="a1-model"></select>
+            </div>
+            <div class="custom-fields" id="a1-custom">
+              <div class="field"><label>Endpoint URL</label><input id="a1-endpoint" type="text" placeholder="https://api.example.com/v1/chat/completions"></div>
+              <div class="field"><label>API Key</label><input id="a1-apikey" type="password" placeholder="sk-..."></div>
+              <div class="field"><label>Model Name</label><input id="a1-custom-model" type="text" placeholder="gpt-4o"></div>
             </div>
             <div class="field"><label>Personality</label>
               <textarea id="a1-prompt">You are Claude: thoughtful, analytical, and curious. You enjoy exploring complex topics with nuance. Keep responses concise and conversational (1-4 sentences). Never use lists or asterisks.</textarea>
+            </div>
+          </div>
+          <div class="feature-section debate">
+            <h4>🔥 Debate Mode</h4>
+            <div class="toggle-row">
+              <span>Force opposing arguments</span>
+              <div class="toggle" id="debateToggle"></div>
+            </div>
+          </div>
+          <div class="feature-section">
+            <h4>⚖️ Moderator AI</h4>
+            <div class="toggle-row">
+              <span>Enable moderator</span>
+              <div class="toggle" id="moderatorToggle"></div>
+            </div>
+            <div class="moderator-fields" id="moderatorFields">
+              <div class="field"><label>Interject every N turns</label>
+                <input id="moderator-everyN" type="number" min="2" max="20" value="6" style="width:80px;background:#2A2A2A;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text-primary);font-size:13px;">
+              </div>
+              <div class="field"><label>Moderator Model</label>
+                <select id="moderator-model"></select>
+              </div>
+              <div class="custom-fields" id="moderator-custom">
+                <div class="field"><label>Endpoint URL</label><input id="moderator-endpoint" type="text" placeholder="https://api.example.com/v1/chat/completions"></div>
+                <div class="field"><label>API Key</label><input id="moderator-apikey" type="password" placeholder="sk-..."></div>
+                <div class="field"><label>Model Name</label><input id="moderator-custom-model" type="text" placeholder="gpt-4o"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -1435,6 +1552,12 @@ const getAutoScroll = setupToggle('autoScrollToggle', true, v => { autoScroll = 
 const getSound = setupToggle('soundToggle', false, v => { soundOn = v; });
 const getAvatars = setupToggle('avatarToggle', true, v => { showAvatars = v; document.querySelectorAll('.msg-avatar').forEach(a => a.style.display = v ? 'flex' : 'none'); });
 const getCompact = setupToggle('compactToggle', false, v => { compactMode = v; document.querySelectorAll('.msg').forEach(m => m.style.padding = v ? '10px 0' : '20px 0'); });
+const getDebateEnabled = setupToggle('debateToggle', false, v => { savePhase1Settings(); });
+const getModeratorEnabled = setupToggle('moderatorToggle', false, v => {
+  const fields = document.getElementById('moderatorFields');
+  if (fields) fields.classList.toggle('show', v);
+  savePhase1Settings();
+});
 
 // Status
 function setStatus(text, type = '') {
@@ -1448,6 +1571,8 @@ function setRunning(running) {
   stopIcon.style.display = running ? 'block' : 'none';
   sendBtn.classList.toggle('stop', running);
   sendBtn.title = running ? 'Stop' : 'Start';
+  const sumBtn = document.getElementById('summarizeBtn');
+  if (sumBtn) sumBtn.classList.toggle('show', running);
 }
 
 // Messages
@@ -1476,14 +1601,19 @@ function copyText(text) {
 
 function renderMessage(agentIdx, content, streaming = false) {
   ensureWelcomeHidden();
+  const isModerator = agentIdx === 2;
   const msg = document.createElement('div');
-  msg.className = 'msg a' + (agentIdx + 1) + (streaming ? ' streaming' : '');
+  msg.className = 'msg' + (isModerator ? ' msg-moderator' : ' a' + (agentIdx + 1)) + (streaming ? ' streaming' : '');
   msg.dataset.agent = agentIdx;
   if (compactMode) msg.style.padding = '10px 0';
 
   const avatar = document.createElement('div');
   avatar.className = 'msg-avatar';
-  avatar.textContent = agents[agentIdx]?.emoji || (agentIdx === 0 ? 'G' : 'C');
+  if (isModerator) {
+    avatar.textContent = '⚖️';
+  } else {
+    avatar.textContent = agents[agentIdx]?.emoji || (agentIdx === 0 ? 'G' : 'C');
+  }
   if (!showAvatars) avatar.style.display = 'none';
 
   const body = document.createElement('div');
@@ -1493,7 +1623,11 @@ function renderMessage(agentIdx, content, streaming = false) {
   header.className = 'msg-header';
   const name = document.createElement('div');
   name.className = 'msg-name';
-  name.textContent = agents[agentIdx]?.name || 'AI ' + (agentIdx + 1);
+  if (isModerator) {
+    name.textContent = 'Moderator';
+  } else {
+    name.textContent = agents[agentIdx]?.name || 'AI ' + (agentIdx + 1);
+  }
 
   const actions = document.createElement('div');
   actions.className = 'msg-actions';
@@ -1574,8 +1708,12 @@ function updateFromState(state) {
   } else if (state.active) {
     setRunning(true);
     if (state.activeMsg) {
-      const a = agents[state.activeMsg.agent];
-      setStatus(`${a?.name || 'AI'} is typing…`, 'active');
+      if (state.activeMsg.agent === 2) {
+        setStatus('⚖️ Moderator is summarizing…', 'active');
+      } else {
+        const a = agents[state.activeMsg.agent];
+        setStatus(`${a?.name || 'AI'} is typing…`, 'active');
+      }
     } else {
       const nextAgent = state.turn % 2;
       const a = agents[nextAgent];
@@ -1627,14 +1765,50 @@ async function startChat() {
   clearChat();
   lastState = null;
 
+  // Build agent configs with model info
+  function getAgentConfig(idx) {
+    const modelSel = document.getElementById('a' + idx + '-model');
+    const modelVal = modelSel ? modelSel.value : 'pollinations:openai-fast';
+    const agent = {
+      name: document.getElementById('a' + idx + '-name').value,
+      emoji: document.getElementById('a' + idx + '-emoji').value,
+      prompt: document.getElementById('a' + idx + '-prompt').value,
+      model: modelVal,
+    };
+    if (modelVal && modelVal.startsWith('custom:')) {
+      agent.endpoint = document.getElementById('a' + idx + '-endpoint').value.trim() || undefined;
+      agent.apiKey = document.getElementById('a' + idx + '-apikey').value.trim() || undefined;
+      const customModel = document.getElementById('a' + idx + '-custom-model').value.trim();
+      if (customModel) agent.model = 'custom:' + customModel;
+    }
+    return agent;
+  }
+
+  // Get moderator config
+  let moderator = null;
+  if (getModeratorEnabled && getModeratorEnabled()) {
+    const modModelSel = document.getElementById('moderator-model');
+    const modModelVal = modModelSel ? modModelSel.value : 'pollinations:openai-fast';
+    moderator = {
+      enabled: true,
+      everyN: +document.getElementById('moderator-everyN').value || 6,
+      model: modModelVal,
+    };
+    if (modModelVal && modModelVal.startsWith('custom:')) {
+      moderator.endpoint = document.getElementById('moderator-endpoint').value.trim() || undefined;
+      moderator.apiKey = document.getElementById('moderator-apikey').value.trim() || undefined;
+      const modCustomModel = document.getElementById('moderator-custom-model').value.trim();
+      if (modCustomModel) moderator.model = 'custom:' + modCustomModel;
+    }
+  }
+
   const body = {
-    agents: [
-      { name: document.getElementById('a0-name').value, emoji: document.getElementById('a0-emoji').value, prompt: document.getElementById('a0-prompt').value },
-      { name: document.getElementById('a1-name').value, emoji: document.getElementById('a1-emoji').value, prompt: document.getElementById('a1-prompt').value },
-    ],
+    agents: [getAgentConfig(0), getAgentConfig(1)],
     topic,
     pauseMs: +document.getElementById('pause').value,
     maxTurns: +document.getElementById('maxTurns').value,
+    debateMode: getDebateEnabled ? getDebateEnabled() : false,
+    moderator: moderator,
   };
   try {
     const res = await fetch('/api/start', {
@@ -2090,6 +2264,16 @@ function applyPreset(preset) {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
   set('a0-name', a[0].name); set('a0-emoji', a[0].emoji); set('a0-prompt', a[0].prompt);
   set('a1-name', a[1].name); set('a1-emoji', a[1].emoji); set('a1-prompt', a[1].prompt);
+  
+  // Handle debate mode if preset specifies it
+  if (preset.debateMode !== undefined && getDebateEnabled) {
+    const dt = document.getElementById('debateToggle');
+    if (dt) {
+      const current = dt.classList.contains('on');
+      if (current !== preset.debateMode) dt.click();
+    }
+  }
+  
   activePresetId = preset.id;
   updateChipLabel(preset);
   renderPresetList();
@@ -2201,6 +2385,203 @@ if (openAgentsBtn) openAgentsBtn.onclick = (e) => {
 loadPresets();
 renderPresetList();
 updateChipLabel(BUILTIN_PRESETS[0]);
+
+// ── Phase 1: Model Loading & Custom Fields ──
+const PHASE1_SETTINGS_KEY = 'ai_talk2talk_phase1_settings';
+
+let availableModels = { providers: [] };
+
+async function loadModels() {
+  try {
+    const res = await fetch('/api/models');
+    if (res.ok) {
+      availableModels = await res.json();
+    }
+  } catch {}
+  populateModelDropdowns();
+}
+
+function populateModelDropdowns() {
+  const selects = ['a0-model', 'a1-model', 'moderator-model'];
+  const providers = availableModels.providers || [];
+  
+  selects.forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const prevVal = sel.value;
+    sel.innerHTML = '';
+    
+    providers.forEach(provider => {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = provider.name;
+      (provider.models || []).forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = provider.id + ':' + m.id;
+        opt.textContent = m.name;
+        optgroup.appendChild(opt);
+      });
+      sel.appendChild(optgroup);
+    });
+    
+    // Always add Custom option at end
+    const customOpt = document.createElement('option');
+    customOpt.value = 'custom:';
+    customOpt.textContent = 'Custom OpenAI-Compatible...';
+    sel.appendChild(customOpt);
+    
+    // Restore previous value if still available
+    if (prevVal) {
+      const optExists = Array.from(sel.options).some(o => o.value === prevVal);
+      if (optExists) sel.value = prevVal;
+    }
+  });
+  
+  // Set up change handlers for custom field visibility
+  selects.forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (sel) sel.addEventListener('change', () => updateCustomFieldsVisibility(selId));
+  });
+  
+  // Initial visibility
+  selects.forEach(selId => updateCustomFieldsVisibility(selId));
+}
+
+function updateCustomFieldsVisibility(selId) {
+  const sel = document.getElementById(selId);
+  if (!sel) return;
+  const isCustom = sel.value.startsWith('custom:');
+  
+  let customDivId;
+  if (selId === 'a0-model') customDivId = 'a0-custom';
+  else if (selId === 'a1-model') customDivId = 'a1-custom';
+  else if (selId === 'moderator-model') customDivId = 'moderator-custom';
+  
+  const customDiv = document.getElementById(customDivId);
+  if (customDiv) customDiv.classList.toggle('show', isCustom);
+}
+
+// Stop & Summarize button
+const summarizeBtnEl = document.getElementById('summarizeBtn');
+if (summarizeBtnEl) {
+  summarizeBtnEl.addEventListener('click', async () => {
+    if (!isRunning) return;
+    setStatus('Stopping & summarizing…');
+    
+    try {
+      await fetch('/api/stop', { method: 'POST' });
+      await new Promise(r => setTimeout(r, 500));
+      const res = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      if (res.ok) {
+        showToast('Summary requested');
+      } else {
+        showToast('Summary failed');
+      }
+    } catch {
+      showToast('Network error');
+    }
+  });
+}
+
+// Phase 1 settings persistence
+function savePhase1Settings() {
+  try {
+    const data = {
+      a0Model: document.getElementById('a0-model')?.value,
+      a0Endpoint: document.getElementById('a0-endpoint')?.value,
+      a0ApiKey: document.getElementById('a0-apikey')?.value,
+      a0CustomModel: document.getElementById('a0-custom-model')?.value,
+      a1Model: document.getElementById('a1-model')?.value,
+      a1Endpoint: document.getElementById('a1-endpoint')?.value,
+      a1ApiKey: document.getElementById('a1-apikey')?.value,
+      a1CustomModel: document.getElementById('a1-custom-model')?.value,
+      debateMode: getDebateEnabled ? getDebateEnabled() : false,
+      moderatorEnabled: getModeratorEnabled ? getModeratorEnabled() : false,
+      moderatorEveryN: document.getElementById('moderator-everyN')?.value || '6',
+      moderatorModel: document.getElementById('moderator-model')?.value,
+      moderatorEndpoint: document.getElementById('moderator-endpoint')?.value,
+      moderatorApiKey: document.getElementById('moderator-apikey')?.value,
+      moderatorCustomModel: document.getElementById('moderator-custom-model')?.value,
+    };
+    localStorage.setItem(PHASE1_SETTINGS_KEY, JSON.stringify(data));
+  } catch {}
+}
+
+function loadPhase1Settings() {
+  try {
+    const stored = localStorage.getItem(PHASE1_SETTINGS_KEY);
+    if (!stored) return;
+    const data = JSON.parse(stored);
+    
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+    setVal('a0-model', data.a0Model);
+    setVal('a0-endpoint', data.a0Endpoint);
+    setVal('a0-apikey', data.a0ApiKey);
+    setVal('a0-custom-model', data.a0CustomModel);
+    setVal('a1-model', data.a1Model);
+    setVal('a1-endpoint', data.a1Endpoint);
+    setVal('a1-apikey', data.a1ApiKey);
+    setVal('a1-custom-model', data.a1CustomModel);
+    setVal('moderator-everyN', data.moderatorEveryN);
+    setVal('moderator-model', data.moderatorModel);
+    setVal('moderator-endpoint', data.moderatorEndpoint);
+    setVal('moderator-apikey', data.moderatorApiKey);
+    setVal('moderator-custom-model', data.moderatorCustomModel);
+    
+    if (data.debateMode) {
+      const dt = document.getElementById('debateToggle');
+      if (dt && !dt.classList.contains('on')) dt.click();
+    }
+    if (data.moderatorEnabled) {
+      const mt = document.getElementById('moderatorToggle');
+      if (mt && !mt.classList.contains('on')) mt.click();
+    }
+    
+    updateCustomFieldsVisibility('a0-model');
+    updateCustomFieldsVisibility('a1-model');
+    updateCustomFieldsVisibility('moderator-model');
+  } catch {}
+}
+
+// Save phase 1 settings on model/field changes
+['a0-model', 'a0-endpoint', 'a0-apikey', 'a0-custom-model',
+ 'a1-model', 'a1-endpoint', 'a1-apikey', 'a1-custom-model',
+ 'moderator-everyN', 'moderator-model', 'moderator-endpoint', 'moderator-apikey', 'moderator-custom-model'
+].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', savePhase1Settings);
+  if (el) el.addEventListener('input', savePhase1Settings);
+});
+
+// Load server presets and merge with client presets
+async function loadServerPresets() {
+  try {
+    const res = await fetch('/api/presets');
+    if (!res.ok) return;
+    const data = await res.json();
+    const serverPresets = (data.presets || []).map(p => ({
+      id: 'server_' + p.id,
+      name: p.name,
+      desc: p.description || '',
+      debateMode: p.debateMode || false,
+      agents: [
+        { name: p.agent1?.name || 'Agent 1', emoji: p.agent1?.emoji || '1', prompt: p.agent1?.prompt || '' },
+        { name: p.agent2?.name || 'Agent 2', emoji: p.agent2?.emoji || '2', prompt: p.agent2?.prompt || '' }
+      ]
+    }));
+    // Merge server presets into custom presets (they appear with ★)
+    // Remove old server presets first
+    customPresets = customPresets.filter(p => !p.id.startsWith('server_'));
+    customPresets = [...serverPresets, ...customPresets];
+    renderPresetList();
+  } catch {}
+}
+
+// Load models and presets on page load
+Promise.all([loadModels(), loadServerPresets()]).then(() => loadPhase1Settings());
 
 // ── Chat History Management ──
 const HISTORY_KEY = 'ai_talk2talk_history';
