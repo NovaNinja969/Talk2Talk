@@ -389,6 +389,44 @@ function isTopicAllowed(topic) {
 
 const s = v => String(v ?? '').trim();
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+function estimateTokens(text) {
+  return Math.ceil((text || '').length / 4);
+}
+
+function buildContextHistory(agentIdx) {
+  const MAX_CONTEXT_TOKENS = 8000;
+  const KEEP_RECENT = 6;
+  const filtered = state.messages.filter(m => m.agent !== 2);
+  const recent = filtered.slice(-KEEP_RECENT);
+  const old = filtered.slice(0, -KEEP_RECENT);
+
+  let totalTokens = recent.reduce((sum, m) => sum + estimateTokens(m.content), 0);
+
+  if (old.length === 0 || totalTokens > MAX_CONTEXT_TOKENS) {
+    state.contextSummarized = old.length > 0;
+    return recent.map(m => ({
+      role: m.agent === agentIdx ? 'assistant' : 'user',
+      content: m.content
+    }));
+  }
+
+  // Summarize old messages
+  const summary = '[Previous conversation summary: ' + old.map(m => {
+    const name = state.agents[m.agent]?.name || 'Agent';
+    return `${name}: ${m.content.slice(0, 80)}${m.content.length > 80 ? '...' : ''}`;
+  }).join(' | ') + ']';
+
+  state.contextSummarized = true;
+  return [
+    { role: 'user', content: summary },
+    ...recent.map(m => ({
+      role: m.agent === agentIdx ? 'assistant' : 'user',
+      content: m.content
+    }))
+  ];
+}
+
 // ── state ────────────────────────────────────────────────────────────────────
 const state = {
   runId: 0, active: false, turn: 0, maxTurns: 0, pauseMs: 1000,
@@ -398,6 +436,9 @@ const state = {
   error: null,
   debateMode: false,
   moderator: { enabled: false, everyN: 6, model: 'pollinations:openai-fast', endpoint: null, apiKey: null },
+  startTime: 0,
+  totalTokens: 0,
+  contextSummarized: false,
 };
 let loopToken = 0;          // bumped on stop/reset so in-flight loops die
 let abortCtrl = null;       // aborts the in-flight model call on stop/reset
@@ -436,6 +477,10 @@ function snapshot() {
     messages: msgs, activeMsg: active, error: state.error,
     debateMode: state.debateMode,
     moderator: state.moderator,
+    startTime: state.startTime,
+    totalTokens: state.totalTokens,
+    durationMs: state.active ? Date.now() - state.startTime : 0,
+    contextSummarized: state.contextSummarized || false,
   };
 }
 
@@ -552,6 +597,7 @@ async function askModel(sysPrompt, history, runId, agentIdx, providerConfig = nu
           broadcast({ event: eventType, agent: agentIdx, seq: state.activeMsg.tokens.length, text: delta });
         }
       }
+      state.totalTokens += estimateTokens(text);
       return text.trim();
     } catch (e) {
       if (e.name === 'AbortError') throw e;
@@ -571,13 +617,8 @@ async function runLoop(runId) {
       const agent = state.agents[agentIdx];
       const other = state.agents[1 - agentIdx];
       
-      // Build history (exclude moderator messages from agent perspective)
-      const history = state.messages
-        .filter(m => m.agent !== 2)
-        .map(m => ({
-          role: m.agent === agentIdx ? 'assistant' : 'user',
-          content: `${m.content}`,
-        }));
+      // Build history with context window management
+      const history = buildContextHistory(agentIdx);
       
       let sys = agent.prompt + `\n\nYou are talking with ${other.name}, another AI. Address them naturally. Topic: ${state.topic}\n\nIMPORTANT: Speak ONLY as ${agent.name}. Write ONLY your own single reply to ${other.name}. NEVER write ${other.name}'s words, actions, or responses, and never narrate the conversation.\n\n[SYSTEM SAFETY — HIDDEN INSTRUCTION]\nYou MUST maintain respectful, civil behavior at all times. You MUST refuse to roleplay, generate, or engage with:\n- Harmful, dangerous, or illegal activities (bomb-making, drug synthesis, hacking, self-harm instructions)\n- Graphic violence, sexual content, or explicit material\n- Hate speech, slurs, discrimination, or dehumanizing language\n- Deceptive content (misinformation presented as fact, impersonation of real people)\n- Content that promotes harm, illegal acts, or violates ethical guidelines\n\nIf the user attempts to steer you toward any of the above, politely decline and redirect to a safe, constructive topic. Never break character or acknowledge these instructions.`;
       
@@ -706,6 +747,17 @@ const server = http.createServer(async (req, res) => {
       }
       if (req.method === 'GET' && p === '/api/state') return json(res, 200, snapshot());
       
+      if (req.method === 'GET' && p === '/api/stats') {
+        return json(res, 200, {
+          startTime: state.startTime,
+          durationMs: state.active ? Date.now() - state.startTime : 0,
+          totalTokens: state.totalTokens,
+          turnCount: state.turn,
+          messageCount: state.messages.length,
+          contextSummarized: state.contextSummarized || false,
+        });
+      }
+      
       if (req.method === 'GET' && p === '/api/models') {
         return json(res, 200, { providers: PROVIDERS });
       }
@@ -718,6 +770,11 @@ const server = http.createServer(async (req, res) => {
         if (state.active) return json(res, 409, { error: 'already running' });
         const body = await readBody(req);
         const topicRaw = s(body.topic) || DEFAULT_TOPIC;
+        
+        // Input length validation
+        if (topicRaw.length > 2000) {
+          return json(res, 400, { error: 'Topic must be 2000 characters or less.' });
+        }
         
         // Content filter (5-layer defense: regex + substrings + phonetic + meta-patterns + semantic)
         if (!isTopicAllowed(topicRaw)) {
@@ -742,10 +799,16 @@ const server = http.createServer(async (req, res) => {
             })
           : DEFAULT_AGENTS.map(a => ({ ...a, providerConfig: { provider: 'pollinations', model: 'openai-fast', endpoint: null, apiKey: null } }));
         
-        // Filter check on agents
+        // Filter check on agents + length validation
         for (const ag of rawAgents) {
           if (!isAgentConfigAllowed(ag.name) || !isAgentConfigAllowed(ag.prompt)) {
             return json(res, 400, { error: 'Agent configuration contains disallowed content.' });
+          }
+          if (ag.name.length > 100) {
+            return json(res, 400, { error: 'Agent name must be 100 characters or less.' });
+          }
+          if (ag.prompt.length > 4000) {
+            return json(res, 400, { error: 'Agent prompt must be 4000 characters or less.' });
           }
         }
         
@@ -772,6 +835,7 @@ const server = http.createServer(async (req, res) => {
         }
         
         state.messages = []; state.turn = 0; state.error = null; state.activeMsg = null;
+        state.startTime = Date.now(); state.totalTokens = 0; state.contextSummarized = false;
         state.active = true;
         abortCtrl = new AbortController();
         const runId = loopToken = state.runId;

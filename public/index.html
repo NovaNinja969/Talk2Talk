@@ -1268,6 +1268,17 @@
     align-items: center;
     gap: 8px;
   }
+  .stats-display {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    padding: 2px 8px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: none;
+  }
+  .stats-display.show { display: inline-block; }
   .timeline-indicator {
     font-size: 12px;
     color: var(--text-secondary);
@@ -1708,6 +1719,7 @@
         <span class="turn-count" id="turnCount">Turn 0</span>
         <span class="next-speaker" id="nextSpeaker"></span>
       </div>
+      <div class="stats-display" id="statsDisplay"></div>
       <div class="timeline-bar">
         <div class="timeline-bar-fill" id="timelineBarFill"></div>
       </div>
@@ -2038,6 +2050,8 @@ let soundOn = false;
 let showAvatars = true;
 let compactMode = false;
 let lastStartConfig = null;
+let lastStartClick = 0;
+let statsPollTimer = null;
 
 // ── Markdown Setup ──
 if (typeof marked !== 'undefined') {
@@ -2195,6 +2209,50 @@ function setRunning(running) {
   sendBtn.title = running ? 'Stop' : 'Start';
   const sumBtn = document.getElementById('summarizeBtn');
   if (sumBtn) sumBtn.classList.toggle('show', running);
+  if (running) startStatsPolling();
+  else stopStatsPolling();
+}
+
+// ── Stats Display Polling ──
+function formatDuration(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+function formatTokens(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return String(n);
+}
+
+async function pollStats() {
+  try {
+    const res = await fetch('/api/stats', { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    const el = document.getElementById('statsDisplay');
+    if (!el) return;
+    if (data.durationMs > 0 || data.turnCount > 0) {
+      el.textContent = `\u23F1\uFE0F ${formatDuration(data.durationMs)} \u00B7 \uD83D\uDD24 ${formatTokens(data.totalTokens)} tokens \u00B7 ${data.turnCount} turns`;
+      el.classList.add('show');
+    } else {
+      el.classList.remove('show');
+    }
+  } catch {}
+}
+
+function startStatsPolling() {
+  if (statsPollTimer) return;
+  pollStats();
+  statsPollTimer = setInterval(pollStats, 5000);
+}
+
+function stopStatsPolling() {
+  if (statsPollTimer) { clearInterval(statsPollTimer); statsPollTimer = null; }
+  const el = document.getElementById('statsDisplay');
+  if (el) el.classList.remove('show');
 }
 
 // Messages
@@ -2542,8 +2600,16 @@ async function handleRestart() {
 }
 
 sendBtn.onclick = () => {
-  if (isRunning) stopChat();
-  else startChat();
+  if (isRunning) { stopChat(); return; }
+  const now = Date.now();
+  if (now - lastStartClick < 1000) {
+    showToast('Already starting...');
+    return;
+  }
+  lastStartClick = now;
+  sendBtn.disabled = true;
+  setTimeout(() => { sendBtn.disabled = false; }, 1000);
+  startChat();
 };
 
 topicInput.addEventListener('keydown', e => {
